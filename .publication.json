@@ -3,8 +3,8 @@
   "entries": [
     {
       "path": "app.mjs",
-      "bytes": 18006,
-      "sha256": "9dd79dc6823f80c77ba49a1605bac98eadb945a00d6a2c25a1842b57265cb2c2"
+      "bytes": 20086,
+      "sha256": "63020017d34617bf9a70602b16a7db11368aea6009f503a37a9fb5c7c97aa882"
     },
     {
       "path": "assets/garden_flowers.png",

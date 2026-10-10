@@ -7,6 +7,7 @@ export function mountApp(root, d) {
   let race = d.createRace(), train = [], shoe = 0, gate = [4, 7];
   let raceHorses = [], raceClock = null;
   let stars = 0;
+  let popIndex = null, popStarted = 0, popAnimations = [];
   const now = d.now || Date.now;
   const node = (tag, text = '', cls = '') => {
     const n = doc.createElement(tag); n.textContent = text; n.className = cls; return n;
@@ -23,7 +24,8 @@ export function mountApp(root, d) {
     try { d.repository.save(next); data = next; saveError = ''; return true; }
     catch { saveError = 'Progress could not be saved. Please ask a parent to check browser storage.'; return false; }
   };
-  const go = target => { cancel(); screen = target; question = null; feedback = ''; render(); };
+  const resetPop = () => { popIndex = null; popAnimations.forEach(a => a.cancel()); popAnimations = []; };
+  const go = target => { resetPop(); cancel(); screen = target; question = null; feedback = ''; render(); };
   function growth(container) {
     const names = ['Seedling', 'Little sprout', 'Leaf buddy', 'Flower crown', 'Garden wings', 'Rainbow friend'];
     const milestones = [0, 8, 20, 40, 70, 110], stage = d.growthStage(data.growthPoints);
@@ -50,6 +52,7 @@ export function mountApp(root, d) {
     busy = false; heard = completed; helped ||= !completed; started = now(); render();
   }
   function next() {
+    resetPop();
     if (game === 'train' && feedback.startsWith('Let’s look together:')) train = [];
     cancel(); feedback = ''; selectedTwin = null; trial = data.letterTrial;
     skill = d.questionSkill(game, trial);
@@ -87,7 +90,9 @@ export function mountApp(root, d) {
     if (game === 'train' && correct) { train = d.advanceTrain(train, question.target, true); feedback = train.length === 5 ? 'Five in a row! Fireworks!' : `All aboard, ${question.target}!`; }
     if (correct && game === 'twins') shoe = d.advanceShoeLacing(shoe, true);
     if (game === 'race') race = d.answerRace(race, correct);
-    commit(updated); cancel(); render();
+    commit(updated); cancel();
+    if (d.shouldStartWordPopBurst(game, word, question.target, false)) { popIndex = index; popStarted = now(); }
+    render();
   }
   function toolbar(shell, title, back) {
     const bar = node('div', '', 'toolbar'); bar.append(button('Back', () => go(back), 'light'), node('h1', title)); shell.append(bar);
@@ -121,6 +126,7 @@ export function mountApp(root, d) {
   }
   function render() {
     if (disposed) return;
+    popAnimations.forEach(a => a.cancel()); popAnimations = [];
     raceHorses = []; raceClock = null;
     const shell = node('div', '', `shell ${screen === 'home' ? 'home' : ''}`);
     if (saveError) shell.append(node('p', saveError, 'warning'));
@@ -198,7 +204,29 @@ export function mountApp(root, d) {
       }
       const choices = node('div', '', 'choices');
       const values = game === 'twins' ? twinItems : question.choices;
-      values.forEach((word, i) => choices.append(button(word, () => answer(word, i), `choice${selectedTwin === i ? ' correct' : ''}${feedback && word === question.target ? ' correct' : ''}`, busy || !!feedback || (game === 'race' && race.phase === 'finished'))));
+      values.forEach((word, i) => {
+        const b = button(word, () => answer(word, i), `choice${selectedTwin === i ? ' correct' : ''}${feedback && word === question.target ? ' correct' : ''}`, busy || !!feedback || (game === 'race' && race.phase === 'finished'));
+        if (game === 'pop') {
+          // Native choiceButton fades/expands only the shell; the word stays readable.
+          b.style.position = 'relative'; b.style.isolation = 'isolate'; b.style.background = 'transparent';
+          b.style.border = '0'; b.style.boxShadow = 'none'; b.style.transform = 'none'; b.style.opacity = '1';
+          const layer = node('span', '', 'pop-shell'); layer.setAttribute('aria-hidden', 'true');
+          Object.assign(layer.style, {position:'absolute',inset:'0',zIndex:'-1',pointerEvents:'none',borderRadius:'inherit',background:i === popIndex ? '#dcefd9' : '#e2f4f1',border:`3px solid ${i === popIndex ? 'var(--teal)' : '#cfe5db'}`,boxShadow:'0 4px 0 #cadcd7'});
+          if (i === popIndex) {
+            const duration = d.wordPopBurstDurationSeconds * 1000;
+            const reduced = !!d.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+            const progress = reduced ? 1 : Math.min(1, Math.max(0, now() - popStarted) / duration);
+            const state = d.wordPopBurstPresentation(progress), end = d.wordPopBurstPresentation(1);
+            layer.style.transform = `scale(${end.shellScale})`; layer.style.opacity = String(end.shellAlpha);
+            if (progress < 1 && layer.animate) popAnimations.push(layer.animate([
+              {transform:`scale(${state.shellScale})`,opacity:state.shellAlpha},
+              {transform:`scale(${end.shellScale})`,opacity:end.shellAlpha}
+            ], {duration:duration * (1 - progress),easing:'linear',fill:'forwards'}));
+          }
+          b.append(layer);
+        }
+        choices.append(b);
+      });
       shell.append(choices, node('p', busy ? 'Listening…' : feedback, 'status'));
       if (feedback || (game === 'race' && race.phase === 'finished')) shell.append(button(game === 'race' && race.phase === 'finished' ? 'Race again' : 'Next', () => { if (game === 'race' && race.phase === 'finished') race = d.startRace(d.createRace()); if (train.length === 5) train = []; next(); }));
       growth(shell);
@@ -218,7 +246,7 @@ export function mountApp(root, d) {
   const timer = d.setInterval ? d.setInterval(tick, 100) : null;
   const hidden = () => { if (doc.visibilityState === 'hidden') { cancel(); helped = true; render(); } };
   doc.addEventListener('visibilitychange', hidden); render();
-  return {dispose() { disposed = true; cancel(); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
+  return {dispose() { disposed = true; resetPop(); cancel(); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
     getState() { return structuredClone({data, screen, game, feedback, busy, heard, helped}); }};
 }
 
@@ -230,6 +258,7 @@ export async function bootstrap(root, env = globalThis) {
   d.repository = d.createRepository(env.localStorage, () => d.freshData(sets));
   d.player = d.createClipPlayer(d.narrationUrls(index), url => new env.Audio(url));
   d.indexKeys = new Set(Object.keys(index)); d.setInterval = env.setInterval.bind(env); d.clearInterval = env.clearInterval.bind(env);
+  d.matchMedia = env.matchMedia?.bind(env);
   d.newId = () => env.crypto.randomUUID();
   return mountApp(root, d);
 }
