@@ -137,6 +137,14 @@ export function mountApp(root, d) {
     } else if (screen === 'parent') renderParent(shell);
     else if (screen === 'play' && question) {
       toolbar(shell, d.gameTitle(game), 'picker'); shell.className += ` game ${game}`;
+      shell.append(button(data.muted ? 'Sound off' : 'Sound on', () => {
+        const muted = !data.muted;
+        if (commit(d.updatePracticeSettings(data, {muted}))) {
+          if (muted || busy) helped = true;
+          cancel();
+        }
+        render();
+      }, 'light'));
       // A target becomes visible only when listening evidence cannot be independent.
       shell.append(node('h2', helped || feedback || game === 'twins' ? d.questionPrompt(game, question.target, trial) : 'Listen, then choose.'));
       if (helped) shell.append(node('p', 'Visual practice: this prompt is muted, unsupported, or could not play. It will not count as independent listening.', 'warning'));
