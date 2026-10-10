@@ -1,0 +1,47 @@
+{
+  "source": "C:\\Users\\dot0m\\Documents\\Codex\\2026-10-01\\hey-the-computer-died-i-did\\outputs\\Meshy-Recovered-20261001\\Full_Asset_Stock_20261001\\Sophia\\sophia-unlaced-shoe.glb",
+  "source_sha256": "0300f65cf10f1af67bc98ba1ab3a66dab19c0691e9b100320d36177728724821",
+  "vertices": 12767,
+  "indices": 45927,
+  "triangles": 15309,
+  "bounds": {
+    "min": [
+      -0.5,
+      -0.20984899997711182,
+      -0.21066699922084808
+    ],
+    "max": [
+      0.5,
+      0.21310999989509583,
+      0.21066300570964813
+    ]
+  },
+  "objects": [
+    {
+      "name": "Mesh_0",
+      "vertices": 12767,
+      "triangles": 15309,
+      "materials": [
+        "Material_0"
+      ]
+    }
+  ],
+  "base_color_images": [
+    {
+      "name": "Image_0",
+      "size": [
+        4096,
+        4096
+      ]
+    }
+  ],
+  "format": "little endian III header magic 0x53484F45, vertexCount, indexCount; vertex float32 xyz normalXYZ uv; uint16 indices",
+  "mesh_sha256": "146a91396054d7f4f55a3196d42840e7c75dc48a62c6de500b3e5ed258923b28",
+  "uv_convention": "Raw Blender UV, V=0 bottom. PNG conventional top row; Android GLUtils Bitmap upload: sample (u,1-v).",
+  "texture_sha256": "c699f54321b5de646f2f0317801c0e4904f3b803b9b2a27ea2d65a4513e32ca5",
+  "asset_sizes": {
+    "anchors.json": 3035,
+    "shoe.mesh": 500410,
+    "shoe.png": 1651461
+  }
+}

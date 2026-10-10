@@ -1,0 +1,32 @@
+{
+  "anchors.json": {
+    "sha256": "1ce2ea1eeb5008373a47d09b2114e4ae93ef5ede283ab5ffdacaa07ff2ac2661",
+    "size": 3035,
+    "path": "C:\\Users\\dot0m\\Documents\\Codex\\2026-09-29\\take-over-deployment-of-c-users\\work\\ios-device-build\\Sources\\SophiasSightWords\\Resources\\shoe\\anchors.json"
+  },
+  "motion.bin": {
+    "sha256": "8408c9386a8a1949fd589ef1c8ce494c7a2d689de03794e820abb4028028b527",
+    "size": 2501568,
+    "path": "C:\\Users\\dot0m\\Documents\\Codex\\2026-09-29\\take-over-deployment-of-c-users\\work\\ios-device-build\\Sources\\SophiasSightWords\\Resources\\shoe\\motion.bin"
+  },
+  "provenance.json": {
+    "sha256": "8c89382acc230a1492bd9b8750a22a5ad79e7f332b25b093ae7f6154bd78cabb",
+    "size": 1374,
+    "path": "C:\\Users\\dot0m\\Documents\\Codex\\2026-09-29\\take-over-deployment-of-c-users\\work\\ios-device-build\\Sources\\SophiasSightWords\\Resources\\shoe\\provenance.json"
+  },
+  "shoe.mesh": {
+    "sha256": "146a91396054d7f4f55a3196d42840e7c75dc48a62c6de500b3e5ed258923b28",
+    "size": 500410,
+    "path": "C:\\Users\\dot0m\\Documents\\Codex\\2026-09-29\\take-over-deployment-of-c-users\\work\\ios-device-build\\Sources\\SophiasSightWords\\Resources\\shoe\\shoe.mesh"
+  },
+  "shoe.png": {
+    "sha256": "c699f54321b5de646f2f0317801c0e4904f3b803b9b2a27ea2d65a4513e32ca5",
+    "size": 1651461,
+    "path": "C:\\Users\\dot0m\\Documents\\Codex\\2026-09-29\\take-over-deployment-of-c-users\\work\\ios-device-build\\Sources\\SophiasSightWords\\Resources\\shoe\\shoe.png"
+  },
+  "threading.json": {
+    "sha256": "113b0b83b398a06e32b72ea9dcd661ce266f970f14c2a645be5ba77701f6c1db",
+    "size": 13291,
+    "path": "C:\\Users\\dot0m\\Documents\\Codex\\2026-09-29\\take-over-deployment-of-c-users\\work\\ios-device-build\\Sources\\SophiasSightWords\\Resources\\shoe\\threading.json"
+  }
+}

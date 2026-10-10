@@ -3,8 +3,8 @@
   "entries": [
     {
       "path": "app.mjs",
-      "bytes": 25158,
-      "sha256": "0f48ec0837ce646d6038bac23268c80066c7092a8d189393b9da45ffbc285dcf"
+      "bytes": 26071,
+      "sha256": "20b8e49936d35a667c8c9b56a8885fea206a3292b9ec60e8878a46d1d4f3aff9"
     },
     {
       "path": "assets/garden_flowers.png",
@@ -1173,8 +1173,8 @@
     },
     {
       "path": "style.css",
-      "bytes": 5428,
-      "sha256": "bcc713a239a829ae6b4c36816b418bef39813a1fddd7400653a075e38f7fa911"
+      "bytes": 5955,
+      "sha256": "8c43d60347d8262c190fe408b7a5365ae9fc0f40fd22ca33b50f9537459814fe"
     },
     {
       "path": "words.mjs",
@@ -1205,6 +1205,61 @@
       "path": "train-motion-fireworks.mjs",
       "bytes": 2410,
       "sha256": "8b8e88d746a58a70e7509de650e7d1994f95ba04234f436b0f6fdf0d99028487"
+    },
+    {
+      "path": "shoe-assets.mjs",
+      "bytes": 3914,
+      "sha256": "4468c1561317db88e6476107847d34e1da06e0ee0b11bd303c66d4a3bac46eae"
+    },
+    {
+      "path": "shoe-tube.mjs",
+      "bytes": 3046,
+      "sha256": "7869740cf851b0e603324c930e1f7be2f5a6335a8b97937a249e0718dbcad34c"
+    },
+    {
+      "path": "shoe-renderer.mjs",
+      "bytes": 10072,
+      "sha256": "0e88647a87bc1a0b4a3555c7a58d9f84bdf5e07f42fc57e5aad61722f9a1f11f"
+    },
+    {
+      "path": "shoe-scene.mjs",
+      "bytes": 13179,
+      "sha256": "c041eee7ad8c5916402ba64b82d285bd545de48b94272704ea4bbb5e4a4dee26"
+    },
+    {
+      "path": "assets/shoe/shoe.mesh",
+      "bytes": 500410,
+      "sha256": "146a91396054d7f4f55a3196d42840e7c75dc48a62c6de500b3e5ed258923b28"
+    },
+    {
+      "path": "assets/shoe/shoe.png",
+      "bytes": 1651461,
+      "sha256": "c699f54321b5de646f2f0317801c0e4904f3b803b9b2a27ea2d65a4513e32ca5"
+    },
+    {
+      "path": "assets/shoe/motion.bin",
+      "bytes": 2501568,
+      "sha256": "8408c9386a8a1949fd589ef1c8ce494c7a2d689de03794e820abb4028028b527"
+    },
+    {
+      "path": "assets/shoe/anchors.json",
+      "bytes": 3035,
+      "sha256": "1ce2ea1eeb5008373a47d09b2114e4ae93ef5ede283ab5ffdacaa07ff2ac2661"
+    },
+    {
+      "path": "assets/shoe/threading.json",
+      "bytes": 13291,
+      "sha256": "113b0b83b398a06e32b72ea9dcd661ce266f970f14c2a645be5ba77701f6c1db"
+    },
+    {
+      "path": "assets/shoe/provenance.json",
+      "bytes": 1374,
+      "sha256": "8c89382acc230a1492bd9b8750a22a5ad79e7f332b25b093ae7f6154bd78cabb"
+    },
+    {
+      "path": "assets/shoe/asset-manifest.json",
+      "bytes": 1846,
+      "sha256": "9dee8a53bebe1b303e485772912a7cc120f181c4812c4cd39c9741b082fab83b"
     }
   ]
 }

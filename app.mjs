@@ -1,4 +1,5 @@
 // Browser orchestration; collaborators keep the native learning rules in their modules.
+import {createShoeScene} from './shoe-scene.mjs';
 import {createTrainArrivalClock} from './train-arrival-clock.mjs';
 import {drawTrainScene} from './train-canvas.mjs';
 import {trainMotionPhase} from './train-motion-phase.mjs';
@@ -17,6 +18,12 @@ export function mountApp(root, d) {
   const trainArrival = createTrainArrivalClock(now);
   let trainFrame = null, trainView = null, trainGeneration = 0, trainCarsAlpha = 1;
   const view = doc.defaultView;
+  let shoeScene = null, shoeTransitionId = 0, shoeNextButton = null;
+  const shoePending = () => game === 'twins' && !!shoeScene?.state.pending;
+  const resetShoe = () => { shoeScene?.dispose(); shoeScene = null; shoeNextButton = null; shoeTransitionId = 0; };
+  const shoeStateChanged = () => {
+    if (!disposed && shoeNextButton) shoeNextButton.disabled = shoePending();
+  };
   const requestFrame = d.requestAnimationFrame || view?.requestAnimationFrame.bind(view);
   const cancelFrame = d.cancelAnimationFrame || view?.cancelAnimationFrame.bind(view);
   const reducedTrainMotion = () => !!d.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -86,7 +93,7 @@ export function mountApp(root, d) {
     catch { saveError = 'Progress could not be saved. Please ask a parent to check browser storage.'; return false; }
   };
   const resetPop = () => { popIndex = null; popAnimations.forEach(a => a.cancel()); popAnimations = []; };
-  const go = target => { resetTrain(); resetPop(); cancel(); screen = target; question = null; feedback = ''; render(); };
+  const go = target => { resetShoe(); resetTrain(); resetPop(); cancel(); screen = target; question = null; feedback = ''; render(); };
   function growth(container) {
     const names = ['Seedling', 'Little sprout', 'Leaf buddy', 'Flower crown', 'Garden wings', 'Rainbow friend'];
     const milestones = [0, 8, 20, 40, 70, 110], stage = d.growthStage(data.growthPoints);
@@ -113,7 +120,7 @@ export function mountApp(root, d) {
     busy = false; heard = completed; helped ||= !completed; started = now(); render();
   }
   function next() {
-    if (trainPending()) return;
+    if (trainPending() || shoePending()) return;
     resetTrain(); resetPop();
     if (game === 'train' && feedback.startsWith('Let’s look together:')) train = [];
     cancel(); feedback = ''; selectedTwin = null; trial = data.letterTrial;
@@ -128,11 +135,12 @@ export function mountApp(root, d) {
       [twinItems[i], twinItems[j]] = [twinItems[j], twinItems[i]];
     }
     helped = data.muted; started = now(); shoe = d.resetShoeAfterCelebration(shoe);
+    if (shoe === 0) shoeTransitionId = 0;
     screen = 'play'; render(); void listen();
   }
   function choose(id) {
     if (!d.availableGames(data.lettersEnabled).some(x => x.id === id)) return;
-    resetTrain(); game = id; race = d.startRace(d.createRace()); train = []; shoe = 0; next();
+    resetShoe(); resetTrain(); game = id; race = d.startRace(d.createRace()); train = []; shoe = 0; next();
   }
   function answer(word, index, source = null) {
     if (busy || feedback || !question || screen !== 'play' || disposed) return;
@@ -150,7 +158,7 @@ export function mountApp(root, d) {
     if (correct) stars++;
     feedback = correct ? (stars % 5 === 0 ? 'Five bright stars!' : 'You found it!') : `Let’s look together: ${question.target}`;
     if (game === 'train' && correct) { train = d.advanceTrain(train, question.target, true); trainCarsAlpha = 1; trainArrival.start(question.target, train.length, source); feedback = train.length === 5 ? 'Five in a row! Fireworks!' : `All aboard, ${question.target}!`; }
-    if (correct && game === 'twins') shoe = d.advanceShoeLacing(shoe, true);
+    if (correct && game === 'twins') { shoe = d.advanceShoeLacing(shoe, true); shoeTransitionId++; }
     if (game === 'race') race = d.answerRace(race, correct);
     commit(updated); cancel();
     if (d.shouldStartWordPopBurst(game, word, question.target, false)) { popIndex = index; popStarted = now(); }
@@ -188,6 +196,8 @@ export function mountApp(root, d) {
   }
   function render() {
     if (disposed) return;
+    shoeNextButton = null;
+    if (screen !== 'play' || game !== 'twins') resetShoe();
     stopTrainFrame();
     popAnimations.forEach(a => a.cancel()); popAnimations = [];
     raceHorses = []; raceClock = null;
@@ -247,11 +257,13 @@ export function mountApp(root, d) {
         trainView = {canvas,scene,shell,nextButton:null};
       }
       if (game === 'twins') {
-        const titles = ['Ready to tie!', 'Cross the laces', 'Make a snug knot', 'Make one bunny ear', 'Wrap the other lace', 'Push a loop through', 'Pull both ears', 'A beautiful bow!'];
-        const scene = node('section', '', 'shoe-instructions');
-        scene.setAttribute('aria-label', `Shoe tying: ${titles[shoe]}`);
-        scene.append(node('h3', titles[shoe]), node('p', shoe === 0 ? 'Match a pair to begin' : `Step ${shoe} of 7`, 'scene'));
-        shell.append(scene);
+        // Keep the original WebGL scene and identity across harmless DOM redraws.
+        if (!shoeScene) shoeScene = createShoeScene({document:doc, stage:shoe,
+          transitionId:shoeTransitionId, now:() => view.performance.now(), onState:shoeStateChanged});
+        shoeScene.update(shoe, shoeTransitionId);
+        const area = node('div', '', 'shoe-scene-area'); area.append(shoeScene.element); shell.append(area);
+        // shoe-complete bubbles from the retained scene with {stage, transitionId}.
+        // Future feedback scheduling can subscribe without writing learning twice.
       }
       if (game === 'letters') {
         const garden = node('section', '', 'letter-garden');
@@ -301,16 +313,18 @@ export function mountApp(root, d) {
       shell.append(choices, node('p', busy ? 'Listening…' : feedback, 'status'));
       if (feedback || (game === 'race' && race.phase === 'finished')) {
         const nextButton = button(game === 'race' && race.phase === 'finished' ? 'Race again' : 'Next', () => {
-          if (trainPending()) return;
+          if (trainPending() || shoePending()) return;
           if (game === 'race' && race.phase === 'finished') race = d.startRace(d.createRace());
           if (train.length === 5) train = []; next();
-        }, '', trainPending());
+        }, '', trainPending() || shoePending());
+        if (game === 'twins') shoeNextButton = nextButton;
         if (trainView) trainView.nextButton = nextButton;
         shell.append(nextButton);
       }
       growth(shell);
     }
     root.replaceChildren(shell);
+    shoeScene?.redraw();
     if (trainView) drawTrainFrame();
   }
   const tick = () => {
@@ -328,8 +342,8 @@ export function mountApp(root, d) {
   const resized = () => { if (trainView && !disposed) { render(); } };
   view?.addEventListener('resize', resized);
   doc.addEventListener('visibilitychange', hidden); render();
-  return {dispose() { disposed = true; resetTrain(); resetPop(); cancel(); view?.removeEventListener('resize', resized); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
-    getState() { return structuredClone({data, screen, game, feedback, busy, heard, helped}); }};
+  return {dispose() { disposed = true; resetShoe(); resetTrain(); resetPop(); cancel(); view?.removeEventListener('resize', resized); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
+    getState() { return structuredClone({data, screen, game, feedback, busy, heard, helped, shoe:shoeScene?.state ?? null}); }};
 }
 
 export async function bootstrap(root, env = globalThis) {
