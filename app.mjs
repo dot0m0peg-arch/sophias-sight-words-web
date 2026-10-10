@@ -146,7 +146,13 @@ export function mountApp(root, d) {
         shell.append(track, node('p', race.phase === 'finished' ? `Finished in place ${race.place}` : `${d.secondsLeft(race)} seconds left`));
       }
       if (game === 'train') { const scene = node('div', '', 'train'); for (const word of train) scene.append(node('span', word, 'wagon')); shell.append(scene); }
-      if (game === 'twins') shell.append(node('p', `Shoe-lacing step ${shoe + 1} of 8 · Choose two matching cards.`, 'scene'));
+      if (game === 'twins') {
+        const titles = ['Ready to tie!', 'Cross the laces', 'Make a snug knot', 'Make one bunny ear', 'Wrap the other lace', 'Push a loop through', 'Pull both ears', 'A beautiful bow!'];
+        const scene = node('section', '', 'shoe-instructions');
+        scene.setAttribute('aria-label', `Shoe tying: ${titles[shoe]}`);
+        scene.append(node('h3', titles[shoe]), node('p', shoe === 0 ? 'Match a pair to begin' : `Step ${shoe} of 7`, 'scene'));
+        shell.append(scene);
+      }
       if (game === 'letters') {
         const garden = node('section', '', 'letter-garden');
         garden.setAttribute('aria-label', `Sophia's flower garden: ${data.gardenTotal} flowers grown. ${Math.min(data.gardenFlowers.length, 7)} flowers visible.`);
