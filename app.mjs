@@ -6,6 +6,7 @@ export function mountApp(root, d) {
   let skill = 'word', trial = 0, started = 0, disposed = false, selectedTwin = null, twinItems = [];
   let race = d.createRace(), train = [], shoe = 0, gate = [4, 7];
   let raceHorses = [], raceClock = null;
+  let stars = 0;
   const now = d.now || Date.now;
   const node = (tag, text = '', cls = '') => {
     const n = doc.createElement(tag); n.textContent = text; n.className = cls; return n;
@@ -81,7 +82,8 @@ export function mountApp(root, d) {
     let updated = d.recordAnswer(data, question.target, correct, Math.max(0, now() - started), {skill, independent, nowMs: now()});
     if (correct && game === 'letters') updated = d.plantGardenFlower(updated, question.target).data;
     // Keep the round locked on a storage failure; never record the same tap twice.
-    feedback = correct ? 'You found it!' : `Let’s look together: ${question.target}`;
+    if (correct) stars++;
+    feedback = correct ? (stars % 5 === 0 ? 'Five bright stars!' : 'You found it!') : `Let’s look together: ${question.target}`;
     if (game === 'train' && correct) { train = d.advanceTrain(train, question.target, true); feedback = train.length === 5 ? 'Five in a row! Fireworks!' : `All aboard, ${question.target}!`; }
     if (correct && game === 'twins') shoe = d.advanceShoeLacing(shoe, true);
     if (game === 'race') race = d.answerRace(race, correct);
@@ -151,6 +153,10 @@ export function mountApp(root, d) {
       shell.append(node('h2', helped || feedback || game === 'twins' ? d.questionPrompt(game, question.target, trial) : 'Listen, then choose.'));
       if (helped) shell.append(node('p', 'Visual practice: this prompt is muted, unsupported, or could not play. It will not count as independent listening.', 'warning'));
       shell.append(button('Listen again', () => void listen(), 'light', busy || !!feedback), button('Show me', () => { helped = true; render(); }, 'light', busy || !!feedback));
+      if (game !== 'train') {
+        const count = node('p', `★ ${stars}`, 'star-count');
+        count.setAttribute('aria-label', `${stars} stars`); shell.append(count);
+      }
       if (game === 'race') {
         const track = node('div', '', 'tracks');
         for (let i = 0; i < 16; i++) { const lane = node('div', '', 'lane'); const horse = image(`unicorn_${i}_0`, i === 0 ? 'Your unicorn' : `Unicorn ${i}`); horse.style.left = `${(i === 0 ? race.progress : d.opponentProgress(i - 1, race.elapsedMs)) * 85}%`; lane.append(horse); track.append(lane); raceHorses.push(horse); }
