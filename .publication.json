@@ -3,8 +3,8 @@
   "entries": [
     {
       "path": "app.mjs",
-      "bytes": 26071,
-      "sha256": "20b8e49936d35a667c8c9b56a8885fea206a3292b9ec60e8878a46d1d4f3aff9"
+      "bytes": 26673,
+      "sha256": "44684821b3a9ef9e4ec4a853ea3ea22bcb8b4edc3d81ccb494af32ebb71b2d2f"
     },
     {
       "path": "assets/garden_flowers.png",
@@ -683,8 +683,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 361,
-      "sha256": "dc4207a2a384ad4f87eeb45c857ce7ee932cf46838d56493533a6cbdf1340a89"
+      "bytes": 410,
+      "sha256": "c4f964a3c5166d3515fcb665071500b3389d83a513842c64722536ba225520ba"
     },
     {
       "path": "narration-paths.mjs",
@@ -1260,6 +1260,16 @@
       "path": "assets/shoe/asset-manifest.json",
       "bytes": 1846,
       "sha256": "9dee8a53bebe1b303e485772912a7cc120f181c4812c4cd39c9741b082fab83b"
+    },
+    {
+      "path": "parent-progress.mjs",
+      "bytes": 10865,
+      "sha256": "744d3dabc93337a08430d248d07c9d82a40f96dc309550ee326c0d0e490dc066"
+    },
+    {
+      "path": "parent-progress.css",
+      "bytes": 793,
+      "sha256": "00026bc63a1542394fc558e025c1fbfdf8acd965464d1e0d48fb59d35caade82"
     }
   ]
 }

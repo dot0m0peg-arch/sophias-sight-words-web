@@ -1,0 +1,11 @@
+.parent-progress { color:#174c50; text-align:left; overflow-wrap:anywhere; }
+.parent-progress > button,.parent-progress-actions button { min-height:44px; margin:5px 8px 5px 0; }
+.parent-word-progress { border-top:1px solid #bbd6cd; padding:12px 0; }
+.parent-word-progress h4 { font-size:26px; margin:4px 0; }
+.parent-word-progress p { margin:6px 0; }
+.parent-progress-actions { display:flex; flex-wrap:wrap; }
+.parent-progress-status:empty { display:none; }
+.parent-progress-confirm { color:#174c50; background:#fffaee; border:2px solid #147d79; border-radius:18px; max-width:min(440px,calc(100vw - 48px)); padding:20px; }
+.parent-progress-confirm::backdrop { background:#183f4470; }
+.parent-progress-confirm button { min-height:44px; margin:8px; }
+.parent-learning-label { font-weight:700; }

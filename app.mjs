@@ -5,8 +5,10 @@ import {drawTrainScene} from './train-canvas.mjs';
 import {trainMotionPhase} from './train-motion-phase.mjs';
 import {trainMotionFlight} from './train-motion-flight.mjs';
 import {trainMotionFireworks} from './train-motion-fireworks.mjs';
+import {mountParentProgress, createPracticeExplanation} from './parent-progress.mjs';
 export function mountApp(root, d) {
   const doc = root.ownerDocument;
+  let parentPanels = [];
   let data = d.repository.load(), screen = 'home', game = 'find', question = null;
   let generation = 0, busy = false, heard = false, helped = false, feedback = '', saveError = '';
   let skill = 'word', trial = 0, started = 0, disposed = false, selectedTwin = null, twinItems = [];
@@ -176,7 +178,7 @@ export function mountApp(root, d) {
     count.value = String(data.choices); count.addEventListener('change', () => { commit(d.updatePracticeSettings(data, {choices: Number(count.value)})); render(); });
     panel.append(count, button(data.muted ? 'Sound off — turn on' : 'Sound on — turn off', () => { commit(d.updatePracticeSettings(data, {muted: !data.muted})); render(); }, 'light'),
       button(data.lettersEnabled ? 'Letter Garden enabled' : 'Letter Garden disabled', () => { commit(d.updatePracticeSettings(data, {lettersEnabled: !data.lettersEnabled})); render(); }, 'light'));
-    shell.append(panel);
+    shell.append(panel, createPracticeExplanation(doc, data));
     for (const set of data.sets) {
       const row = node('div', '', 'panel'); row.append(node('h2', set.name), node('p', set.words.join(', '), 'words'),
         button(set.active ? 'Active — turn off' : 'Inactive — turn on', () => { commit(d.toggleWordSet(data, set.id, !set.active)); render(); }, 'light'));
@@ -185,7 +187,11 @@ export function mountApp(root, d) {
       const save = node('button', 'Save this list'); save.type = 'submit'; form.append(name, words, save);
       form.addEventListener('submit', e => { e.preventDefault(); const result = d.saveWordSet(data, {id: set.id, name: name.value, wordsText: words.value});
         if (result.error) { saveError = result.error; render(); } else { commit(result.data); render(); } });
-      row.append(form); shell.append(row);
+      row.append(form);
+      parentPanels.push(mountParentProgress(row, {setId:set.id, getData:()=>data, isAuthorized:()=>!disposed && screen==='parent',
+        commit:(next,expected)=>expected===data && commit(next), onChange:()=>render(), player:d.player,
+        resolveClips:word=>d.resolveClipTexts(word,d.indexKeys)}));
+      shell.append(row);
     }
     const create = node('form', '', 'panel'), name = node('input'), words = node('textarea');
     name.type = 'text'; name.setAttribute('aria-label', 'New list name'); words.setAttribute('aria-label', 'New list words');
@@ -196,6 +202,7 @@ export function mountApp(root, d) {
   }
   function render() {
     if (disposed) return;
+    parentPanels.forEach(p=>p.dispose()); parentPanels=[];
     shoeNextButton = null;
     if (screen !== 'play' || game !== 'twins') resetShoe();
     stopTrainFrame();
@@ -342,7 +349,7 @@ export function mountApp(root, d) {
   const resized = () => { if (trainView && !disposed) { render(); } };
   view?.addEventListener('resize', resized);
   doc.addEventListener('visibilitychange', hidden); render();
-  return {dispose() { disposed = true; resetShoe(); resetTrain(); resetPop(); cancel(); view?.removeEventListener('resize', resized); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
+  return {dispose() { if (disposed) return; parentPanels.forEach(p=>p.dispose()); parentPanels=[]; disposed = true; resetShoe(); resetTrain(); resetPop(); cancel(); view?.removeEventListener('resize', resized); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
     getState() { return structuredClone({data, screen, game, feedback, busy, heard, helped, shoe:shoeScene?.state ?? null}); }};
 }
 
