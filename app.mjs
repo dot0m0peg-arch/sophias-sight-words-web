@@ -27,6 +27,11 @@ export function mountApp(root, d) {
     const milestones = [0, 8, 20, 40, 70, 110], stage = d.growthStage(data.growthPoints);
     const panel = node('div', '', 'companion'); panel.append(image('meshy_pip', 'Pip the smiling sprout'));
     const text = node('div', `Pip: ${names[stage]} · ${data.growthPoints} growth`, 'growth');
+    const meter = node('progress'); meter.max = 1;
+    meter.value = stage < 5 ? Math.min(Math.max((data.growthPoints - milestones[stage]) / (milestones[stage + 1] - milestones[stage]), 0), 1) : 1;
+    meter.setAttribute('aria-label', `Pip’s growth toward ${names[stage < 5 ? stage + 1 : stage]}`);
+    meter.setAttribute('aria-valuetext', `${Math.floor(meter.value * 100)} percent`);
+    text.append(meter);
     if (stage < 5) text.append(node('p', `${milestones[stage + 1] - data.growthPoints} growth to ${names[stage + 1]}`, 'small'));
     panel.append(text); container.append(panel);
   }
