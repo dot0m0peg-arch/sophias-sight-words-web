@@ -48,6 +48,7 @@ export function mountApp(root, d) {
     busy = false; heard = completed; helped ||= !completed; started = now(); render();
   }
   function next() {
+    if (game === 'train' && feedback.startsWith('Let’s look together:')) train = [];
     cancel(); feedback = ''; selectedTwin = null; trial = data.letterTrial;
     skill = d.questionSkill(game, trial);
     question = d.nextQuestion(data, {skill, nowMs: now()});
@@ -80,7 +81,7 @@ export function mountApp(root, d) {
     if (correct && game === 'letters') updated = d.plantGardenFlower(updated, question.target).data;
     // Keep the round locked on a storage failure; never record the same tap twice.
     feedback = correct ? 'You found it!' : `Let’s look together: ${question.target}`;
-    if (game === 'train') { train = d.advanceTrain(train, question.target, correct); if (train.length === 5) feedback = 'Five in a row! Fireworks!'; }
+    if (game === 'train' && correct) { train = d.advanceTrain(train, question.target, true); feedback = train.length === 5 ? 'Five in a row! Fireworks!' : `All aboard, ${question.target}!`; }
     if (correct && game === 'twins') shoe = d.advanceShoeLacing(shoe, true);
     if (game === 'race') race = d.answerRace(race, correct);
     commit(updated); cancel(); render();
@@ -145,7 +146,12 @@ export function mountApp(root, d) {
         for (let i = 0; i < 16; i++) { const lane = node('div', '', 'lane'); const horse = image(`unicorn_${i}_0`, i === 0 ? 'Your unicorn' : `Unicorn ${i}`); horse.style.left = `${(i === 0 ? race.progress : d.opponentProgress(i - 1, race.elapsedMs)) * 85}%`; lane.append(horse); track.append(lane); }
         shell.append(track, node('p', race.phase === 'finished' ? `Finished in place ${race.place}` : `${d.secondsLeft(race)} seconds left`));
       }
-      if (game === 'train') { const scene = node('div', '', 'train'); for (const word of train) scene.append(node('span', word, 'wagon')); shell.append(scene); }
+      if (game === 'train') {
+        const scene = node('div', '', 'train'); scene.setAttribute('aria-label', `Train has ${train.length} word cars`);
+        const count = node('p', `${train.length} / 5`, 'train-count'); count.setAttribute('aria-label', `${train.length} of 5 word cars`);
+        train.forEach((word, i) => { const car = node('span', word, 'wagon'); car.setAttribute('aria-label', `Train car ${i + 1}: ${word}`); scene.append(car); });
+        shell.append(count, scene);
+      }
       if (game === 'twins') {
         const titles = ['Ready to tie!', 'Cross the laces', 'Make a snug knot', 'Make one bunny ear', 'Wrap the other lace', 'Push a loop through', 'Pull both ears', 'A beautiful bow!'];
         const scene = node('section', '', 'shoe-instructions');
