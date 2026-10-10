@@ -147,7 +147,7 @@ export function mountApp(root, d) {
       const values = game === 'twins' ? twinItems : question.choices;
       values.forEach((word, i) => choices.append(button(word, () => answer(word, i), `choice${selectedTwin === i ? ' correct' : ''}${feedback && word === question.target ? ' correct' : ''}`, busy || !!feedback || (game === 'race' && race.phase === 'finished'))));
       shell.append(choices, node('p', busy ? 'Listening…' : feedback, 'status'));
-      if (feedback) shell.append(button(game === 'race' && race.phase === 'finished' ? 'Race again' : 'Next', () => { if (game === 'race' && race.phase === 'finished') race = d.startRace(d.createRace()); if (train.length === 5) train = []; next(); }));
+      if (feedback || (game === 'race' && race.phase === 'finished')) shell.append(button(game === 'race' && race.phase === 'finished' ? 'Race again' : 'Next', () => { if (game === 'race' && race.phase === 'finished') race = d.startRace(d.createRace()); if (train.length === 5) train = []; next(); }));
       growth(shell);
     }
     root.replaceChildren(shell);
