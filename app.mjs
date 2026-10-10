@@ -147,7 +147,26 @@ export function mountApp(root, d) {
       }
       if (game === 'train') { const scene = node('div', '', 'train'); for (const word of train) scene.append(node('span', word, 'wagon')); shell.append(scene); }
       if (game === 'twins') shell.append(node('p', `Shoe-lacing step ${shoe + 1} of 8 · Choose two matching cards.`, 'scene'));
-      if (game === 'letters') shell.append(node('p', `${data.gardenTotal} flowers grown`, 'flowers'));
+      if (game === 'letters') {
+        const garden = node('section', '', 'letter-garden');
+        garden.setAttribute('aria-label', `Sophia's flower garden: ${data.gardenTotal} flowers grown. ${Math.min(data.gardenFlowers.length, 7)} flowers visible.`);
+        garden.style.background = '#e5f3e4'; garden.style.borderRadius = '22px'; garden.style.padding = '12px';
+        garden.append(node('p', `Sophia's flower garden • ${data.gardenTotal} grown`));
+        const bed = node('div', '', 'garden-bed');
+        bed.style.display = 'flex'; bed.style.justifyContent = 'center'; bed.style.borderBottom = '10px solid #b86640';
+        if (!data.gardenFlowers.length) bed.append(node('p', 'Find a letter to grow your first flower!'));
+        const names = ['Phalaenopsis orchid', 'Vanda orchid', 'toad lily', 'lady slipper orchid'];
+        for (const species of data.gardenFlowers.slice(-7)) {
+          const index = Math.min(Math.max(species, 0), 3);
+          const flower = node('div', '', 'garden-flower');
+          flower.setAttribute('role', 'img'); flower.setAttribute('aria-label', names[index]);
+          flower.style.width = 'min(76px, 14.285%)'; flower.style.aspectRatio = '1';
+          flower.style.backgroundImage = 'url("assets/garden_flowers.png")'; flower.style.backgroundSize = '200% 200%';
+          flower.style.backgroundPosition = `${index % 2 ? 100 : 0}% ${index >= 2 ? 100 : 0}%`;
+          bed.append(flower);
+        }
+        garden.append(bed); shell.append(garden);
+      }
       const choices = node('div', '', 'choices');
       const values = game === 'twins' ? twinItems : question.choices;
       values.forEach((word, i) => choices.append(button(word, () => answer(word, i), `choice${selectedTwin === i ? ' correct' : ''}${feedback && word === question.target ? ' correct' : ''}`, busy || !!feedback || (game === 'race' && race.phase === 'finished'))));
