@@ -3,8 +3,8 @@
   "entries": [
     {
       "path": "app.mjs",
-      "bytes": 20086,
-      "sha256": "63020017d34617bf9a70602b16a7db11368aea6009f503a37a9fb5c7c97aa882"
+      "bytes": 25158,
+      "sha256": "0f48ec0837ce646d6038bac23268c80066c7092a8d189393b9da45ffbc285dcf"
     },
     {
       "path": "assets/garden_flowers.png",
@@ -1180,6 +1180,31 @@
       "path": "words.mjs",
       "bytes": 1027,
       "sha256": "ddc9048ca7e6dc66c5fbcb0381bc8cf3cda5e85bdffc6450de696fa6d866c2c8"
+    },
+    {
+      "path": "train-arrival-clock.mjs",
+      "bytes": 1003,
+      "sha256": "f8e651ce7e023893ac3986fcedddb66cbc1c87dd0f46ee581afc9a28a03d74a0"
+    },
+    {
+      "path": "train-canvas.mjs",
+      "bytes": 3317,
+      "sha256": "d306df4b9c9c98a2d872da21ec716affbd081a2241a58c80061eee313b59d0ec"
+    },
+    {
+      "path": "train-motion-phase.mjs",
+      "bytes": 710,
+      "sha256": "92c8155ca1b81ce7d739a3ab0f44f6477ebb2209c2baf7a12bd22db81f194644"
+    },
+    {
+      "path": "train-motion-flight.mjs",
+      "bytes": 1029,
+      "sha256": "a8f1741dd91410407cbfa8dad885c3a5639c15a69afe1bfc5063be6d674dfc2d"
+    },
+    {
+      "path": "train-motion-fireworks.mjs",
+      "bytes": 2410,
+      "sha256": "8b8e88d746a58a70e7509de650e7d1994f95ba04234f436b0f6fdf0d99028487"
     }
   ]
 }

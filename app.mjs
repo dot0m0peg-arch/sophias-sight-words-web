@@ -1,4 +1,9 @@
 // Browser orchestration; collaborators keep the native learning rules in their modules.
+import {createTrainArrivalClock} from './train-arrival-clock.mjs';
+import {drawTrainScene} from './train-canvas.mjs';
+import {trainMotionPhase} from './train-motion-phase.mjs';
+import {trainMotionFlight} from './train-motion-flight.mjs';
+import {trainMotionFireworks} from './train-motion-fireworks.mjs';
 export function mountApp(root, d) {
   const doc = root.ownerDocument;
   let data = d.repository.load(), screen = 'home', game = 'find', question = null;
@@ -9,6 +14,62 @@ export function mountApp(root, d) {
   let stars = 0;
   let popIndex = null, popStarted = 0, popAnimations = [];
   const now = d.now || Date.now;
+  const trainArrival = createTrainArrivalClock(now);
+  let trainFrame = null, trainView = null, trainGeneration = 0, trainCarsAlpha = 1;
+  const view = doc.defaultView;
+  const requestFrame = d.requestAnimationFrame || view?.requestAnimationFrame.bind(view);
+  const cancelFrame = d.cancelAnimationFrame || view?.cancelAnimationFrame.bind(view);
+  const reducedTrainMotion = () => !!d.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const stopTrainFrame = () => {
+    trainGeneration++;
+    if (trainFrame !== null) cancelFrame?.(trainFrame);
+    trainFrame = null; trainView = null;
+  };
+  const resetTrain = () => { stopTrainFrame(); trainArrival.cancel(); trainCarsAlpha = 1; };
+  const trainPending = () => {
+    const arrival = trainArrival.snapshot();
+    return !!arrival && !trainMotionPhase(arrival.elapsedMs, arrival.carCount, reducedTrainMotion()).done;
+  };
+  const trainSource = button => {
+    if (game !== 'train') return null;
+    const r = button.getBoundingClientRect(), s = button.closest('.shell').getBoundingClientRect();
+    return {x:r.x-s.x, y:r.y-s.y, width:r.width, height:r.height};
+  };
+  // Rendering owns frame scheduling only. Learning is committed exclusively in answer().
+  function drawTrainFrame(token = trainGeneration) {
+    if (disposed || token !== trainGeneration || !trainView || screen !== 'play' || game !== 'train') return;
+    trainFrame = null;
+    const {canvas, scene, shell, nextButton} = trainView, ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const box = shell.getBoundingClientRect(), track = scene.getBoundingClientRect();
+    const width = box.width, height = box.height, scale = view?.devicePixelRatio || 1;
+    if (!(width > 0 && height > 0)) return;
+    if (canvas.width !== Math.round(width * scale) || canvas.height !== Math.round(height * scale)) {
+      canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
+    }
+    ctx.setTransform(scale,0,0,scale,0,0); ctx.clearRect(0,0,width,height);
+    const area = {x:track.x-box.x,y:track.y-box.y,width:track.width,height:track.height};
+    // The renderer is the authority for slot geometry; never duplicate it in the app.
+    const layout = drawTrainScene(ctx, area, []);
+    if (!layout) return;
+    const arrival = trainArrival.snapshot(), frame = {carsAlpha:trainCarsAlpha};
+    let phase = null;
+    if (arrival) {
+      phase = trainMotionPhase(arrival.elapsedMs, arrival.carCount, reducedTrainMotion());
+      frame.carsAlpha = phase.carsAlpha;
+      if (phase.phase === 'flight') {
+        const source = arrival.source || {x:area.x+area.width/2-80*layout.unit,y:area.y+area.height+100*layout.unit,width:160*layout.unit,height:100*layout.unit};
+        frame.moving = trainMotionFlight(source, layout.slots[arrival.carCount-1], layout.unit, phase.flight);
+      }
+      if (phase.phase === 'burst') frame.particles = trainMotionFireworks(layout.slots, layout.unit, phase.burst);
+    }
+    ctx.clearRect(0,0,width,height); drawTrainScene(ctx, area, train, frame);
+    if (phase?.done && trainArrival.finish(arrival.id)) trainCarsAlpha = phase.carsAlpha;
+    if (nextButton) nextButton.disabled = !!phase && !phase.done;
+    if (arrival && !phase.done && doc.visibilityState !== 'hidden' && requestFrame) {
+      trainFrame = requestFrame(() => drawTrainFrame(token));
+    }
+  }
   const node = (tag, text = '', cls = '') => {
     const n = doc.createElement(tag); n.textContent = text; n.className = cls; return n;
   };
@@ -25,7 +86,7 @@ export function mountApp(root, d) {
     catch { saveError = 'Progress could not be saved. Please ask a parent to check browser storage.'; return false; }
   };
   const resetPop = () => { popIndex = null; popAnimations.forEach(a => a.cancel()); popAnimations = []; };
-  const go = target => { resetPop(); cancel(); screen = target; question = null; feedback = ''; render(); };
+  const go = target => { resetTrain(); resetPop(); cancel(); screen = target; question = null; feedback = ''; render(); };
   function growth(container) {
     const names = ['Seedling', 'Little sprout', 'Leaf buddy', 'Flower crown', 'Garden wings', 'Rainbow friend'];
     const milestones = [0, 8, 20, 40, 70, 110], stage = d.growthStage(data.growthPoints);
@@ -52,7 +113,8 @@ export function mountApp(root, d) {
     busy = false; heard = completed; helped ||= !completed; started = now(); render();
   }
   function next() {
-    resetPop();
+    if (trainPending()) return;
+    resetTrain(); resetPop();
     if (game === 'train' && feedback.startsWith('Let’s look together:')) train = [];
     cancel(); feedback = ''; selectedTwin = null; trial = data.letterTrial;
     skill = d.questionSkill(game, trial);
@@ -70,9 +132,9 @@ export function mountApp(root, d) {
   }
   function choose(id) {
     if (!d.availableGames(data.lettersEnabled).some(x => x.id === id)) return;
-    game = id; race = d.startRace(d.createRace()); train = []; shoe = 0; next();
+    resetTrain(); game = id; race = d.startRace(d.createRace()); train = []; shoe = 0; next();
   }
-  function answer(word, index) {
+  function answer(word, index, source = null) {
     if (busy || feedback || !question || screen !== 'play' || disposed) return;
     if (game === 'race' && race.phase !== 'running') return;
     const correct = word === question.target;
@@ -87,7 +149,7 @@ export function mountApp(root, d) {
     // Keep the round locked on a storage failure; never record the same tap twice.
     if (correct) stars++;
     feedback = correct ? (stars % 5 === 0 ? 'Five bright stars!' : 'You found it!') : `Let’s look together: ${question.target}`;
-    if (game === 'train' && correct) { train = d.advanceTrain(train, question.target, true); feedback = train.length === 5 ? 'Five in a row! Fireworks!' : `All aboard, ${question.target}!`; }
+    if (game === 'train' && correct) { train = d.advanceTrain(train, question.target, true); trainCarsAlpha = 1; trainArrival.start(question.target, train.length, source); feedback = train.length === 5 ? 'Five in a row! Fireworks!' : `All aboard, ${question.target}!`; }
     if (correct && game === 'twins') shoe = d.advanceShoeLacing(shoe, true);
     if (game === 'race') race = d.answerRace(race, correct);
     commit(updated); cancel();
@@ -126,6 +188,7 @@ export function mountApp(root, d) {
   }
   function render() {
     if (disposed) return;
+    stopTrainFrame();
     popAnimations.forEach(a => a.cancel()); popAnimations = [];
     raceHorses = []; raceClock = null;
     const shell = node('div', '', `shell ${screen === 'home' ? 'home' : ''}`);
@@ -170,10 +233,18 @@ export function mountApp(root, d) {
         shell.append(track, raceClock);
       }
       if (game === 'train') {
-        const scene = node('div', '', 'train'); scene.setAttribute('aria-label', `Train has ${train.length} word cars`);
+        const scene = node('div', '', 'train train-track'); scene.setAttribute('aria-label', `Train has ${train.length} word cars`);
+        Object.assign(scene.style, {display:'block',height:'125px',minHeight:'125px',background:'transparent'});
         const count = node('p', `${train.length} / 5`, 'train-count'); count.setAttribute('aria-label', `${train.length} of 5 word cars`);
-        train.forEach((word, i) => { const car = node('span', word, 'wagon'); car.setAttribute('aria-label', `Train car ${i + 1}: ${word}`); scene.append(car); });
-        shell.append(count, scene);
+        train.forEach((word, i) => {
+          const car = node('span', word, 'wagon'); car.setAttribute('aria-label', `Train car ${i + 1}: ${word}`);
+          Object.assign(car.style, {position:'absolute',width:'1px',height:'1px',padding:'0',border:'0',overflow:'hidden',clipPath:'inset(50%)'});
+          scene.append(car);
+        });
+        const canvas = node('canvas', '', 'train-canvas'); canvas.setAttribute('aria-hidden','true');
+        Object.assign(canvas.style, {position:'absolute',inset:'0',width:'100%',height:'100%',pointerEvents:'none',zIndex:'1'});
+        Object.assign(shell.style, {position:'relative',display:'block',background:'transparent'}); shell.append(count, scene, canvas);
+        trainView = {canvas,scene,shell,nextButton:null};
       }
       if (game === 'twins') {
         const titles = ['Ready to tie!', 'Cross the laces', 'Make a snug knot', 'Make one bunny ear', 'Wrap the other lace', 'Push a loop through', 'Pull both ears', 'A beautiful bow!'];
@@ -205,7 +276,7 @@ export function mountApp(root, d) {
       const choices = node('div', '', 'choices');
       const values = game === 'twins' ? twinItems : question.choices;
       values.forEach((word, i) => {
-        const b = button(word, () => answer(word, i), `choice${selectedTwin === i ? ' correct' : ''}${feedback && word === question.target ? ' correct' : ''}`, busy || !!feedback || (game === 'race' && race.phase === 'finished'));
+        const b = button(word, () => answer(word, i, trainSource(b)), `choice${selectedTwin === i ? ' correct' : ''}${feedback && word === question.target ? ' correct' : ''}`, busy || !!feedback || (game === 'race' && race.phase === 'finished'));
         if (game === 'pop') {
           // Native choiceButton fades/expands only the shell; the word stays readable.
           b.style.position = 'relative'; b.style.isolation = 'isolate'; b.style.background = 'transparent';
@@ -228,10 +299,19 @@ export function mountApp(root, d) {
         choices.append(b);
       });
       shell.append(choices, node('p', busy ? 'Listening…' : feedback, 'status'));
-      if (feedback || (game === 'race' && race.phase === 'finished')) shell.append(button(game === 'race' && race.phase === 'finished' ? 'Race again' : 'Next', () => { if (game === 'race' && race.phase === 'finished') race = d.startRace(d.createRace()); if (train.length === 5) train = []; next(); }));
+      if (feedback || (game === 'race' && race.phase === 'finished')) {
+        const nextButton = button(game === 'race' && race.phase === 'finished' ? 'Race again' : 'Next', () => {
+          if (trainPending()) return;
+          if (game === 'race' && race.phase === 'finished') race = d.startRace(d.createRace());
+          if (train.length === 5) train = []; next();
+        }, '', trainPending());
+        if (trainView) trainView.nextButton = nextButton;
+        shell.append(nextButton);
+      }
       growth(shell);
     }
     root.replaceChildren(shell);
+    if (trainView) drawTrainFrame();
   }
   const tick = () => {
     if (!disposed && screen === 'play' && game === 'race' && !busy && !feedback && doc.visibilityState !== 'hidden') {
@@ -244,9 +324,11 @@ export function mountApp(root, d) {
     }
   };
   const timer = d.setInterval ? d.setInterval(tick, 100) : null;
-  const hidden = () => { if (doc.visibilityState === 'hidden') { cancel(); helped = true; render(); } };
+  const hidden = () => { if (doc.visibilityState === 'hidden') { cancel(); helped = true; render(); } else if (trainView) render(); };
+  const resized = () => { if (trainView && !disposed) { render(); } };
+  view?.addEventListener('resize', resized);
   doc.addEventListener('visibilitychange', hidden); render();
-  return {dispose() { disposed = true; resetPop(); cancel(); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
+  return {dispose() { disposed = true; resetTrain(); resetPop(); cancel(); view?.removeEventListener('resize', resized); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
     getState() { return structuredClone({data, screen, game, feedback, busy, heard, helped}); }};
 }
 
