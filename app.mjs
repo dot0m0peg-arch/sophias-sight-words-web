@@ -1,4 +1,13 @@
+import {createSceneBackground} from './scene-background.mjs';
+import {createAdventureArt} from './adventure-art.mjs';
+import {mountHomeLayout} from './home-layout.mjs';
+import {createUnicornRaceView} from './unicorn-race-view.mjs';
 // Browser orchestration; collaborators keep the native learning rules in their modules.
+import {createPracticeEffects} from './practice-effects.mjs';
+import {createPipCompanion} from './pip-companion.mjs';
+import {createLetterBloom} from './letter-bloom.mjs';
+import {createStarCelebration} from './star-celebration.mjs';
+import {createWordPopFloat} from './word-pop-float.mjs';
 import {createShoeScene} from './shoe-scene.mjs';
 import {createTrainArrivalClock} from './train-arrival-clock.mjs';
 import {drawTrainScene} from './train-canvas.mjs';
@@ -8,15 +17,64 @@ import {trainMotionFireworks} from './train-motion-fireworks.mjs';
 import {mountParentProgress, createPracticeExplanation} from './parent-progress.mjs';
 export function mountApp(root, d) {
   const doc = root.ownerDocument;
-  let parentPanels = [];
+  let parentPanels = [], nativeHome=null, nativeBackground=null, nativeTileArt=[];
   let data = d.repository.load(), screen = 'home', game = 'find', question = null;
   let generation = 0, busy = false, heard = false, helped = false, feedback = '', saveError = '';
   let skill = 'word', trial = 0, started = 0, disposed = false, selectedTwin = null, twinItems = [];
   let race = d.createRace(), train = [], shoe = 0, gate = [4, 7];
-  let raceHorses = [], raceClock = null;
-  let stars = 0;
+  let raceClock = null, nativeRaceView=null, raceFrameHandle=null, raceVisualStarted=0, lastRaceVisual=null;
+  function stopRaceFrame(){if(raceFrameHandle!==null)cancelFrame?.(raceFrameHandle);raceFrameHandle=null;}
+  function updateRaceView(){
+    if(!nativeRaceView)return;
+    const frame = reducedTrainMotion() || race.phase!=='running' || doc.visibilityState==='hidden' ? 0 : Math.floor(Math.max(0,now()-raceVisualStarted)*12/1000)%8;
+    const visualKey=[frame,race.phase,race.progress,race.boostMs,race.hits,race.elapsedMs].join('|');
+    if(visualKey===lastRaceVisual)return;lastRaceVisual=visualKey;
+    nativeRaceView.update({race,frame,opponents:Array.from({length:15},(_,i)=>d.opponentProgress(i,race.elapsedMs)),secondsLeft:d.secondsLeft(race)});
+    if(raceClock)raceClock.textContent=race.phase==='finished'?`Finished in place ${race.place}`:`${d.secondsLeft(race)} seconds left`;
+  }
+  function drawRaceFrame(){
+    raceFrameHandle=null;
+    if(disposed||screen!=='play'||game!=='race'||!nativeRaceView)return;
+    updateRaceView();
+    if(race.phase==='running'&&!reducedTrainMotion()&&doc.visibilityState!=='hidden')raceFrameHandle=requestFrame?.(drawRaceFrame)??null;
+  }
+  function disposeNativeViews(){
+    nativeHome?.dispose();nativeHome=null;nativeBackground?.dispose();nativeBackground=null;
+    nativeTileArt.forEach(x=>x.dispose());nativeTileArt=[];
+  }
+  let stars = 0, roundId = 0, feedbackCorrect = false, popSessionId = 0;
+  let gardenBloom = null;
+  const letterBloom = createLetterBloom({document:doc});
+  const starCelebration = createStarCelebration({document:doc});
+  const popFloat = createWordPopFloat({document:doc});
+  const gardenPending = () => game === 'letters' && !!gardenBloom?.pending;
+  const resetGarden = () => { letterBloom.cancel(); gardenBloom = null; };
+  function gardenComplete(id) {
+    if (disposed || screen !== 'play' || game !== 'letters' || id !== roundId ||
+        gardenBloom?.id !== id || !gardenBloom.pending) return;
+    gardenBloom.pending = false;
+    effects.completeAnimation(id);
+    // Only the real accepted bloom callback may release this round's presentation.
+    root.dispatchEvent(new view.CustomEvent('garden-complete', {bubbles:true,
+      detail:{roundId:id, transitionId:id}}));
+    render();
+  }
   let popIndex = null, popStarted = 0, popAnimations = [];
   const now = d.now || Date.now;
+  let practiceSaveFailed = false;
+  const raceTerminal = () => game==='race' && race.phase==='finished';
+  const raceCanAnswer = () => game!=='race' || race.phase==='running';
+  const effects = createPracticeEffects({
+    play:text=>{const clips=d.resolveClipTexts(text,d.indexKeys);return clips?d.player.play(clips):Promise.resolve(false);},
+    stop:()=>d.player.stop(), prompt:r=>d.questionPrompt(r.game,r.target,r.trial),
+    setTimeout:doc.defaultView.setTimeout.bind(doc.defaultView), clearTimeout:doc.defaultView.clearTimeout.bind(doc.defaultView),
+    onState:s=>{if(disposed||!s||s.id!==roundId)return;const wasBusy=busy;busy=s.busy||s.pending;heard=s.heard;helped||=s.helped;
+      if(wasBusy&&!busy&&!s.feedback)started=now();if(screen==='play')render();},
+    onAdvance:id=>{if(disposed||id!==roundId||screen!=='play'||practiceSaveFailed||raceTerminal())return;if(train.length===5)train=[];next();}
+  });
+  const syncPracticeEnvironment = () => effects.environment({visible:doc.visibilityState!=='hidden', muted:data.muted,
+    canPrompt:raceCanAnswer(), terminal:raceTerminal(), saveError:practiceSaveFailed});
+  const pipCompanion = createPipCompanion(doc, {now, matchMedia:d.matchMedia});
   const trainArrival = createTrainArrivalClock(now);
   let trainFrame = null, trainView = null, trainGeneration = 0, trainCarsAlpha = 1;
   const view = doc.defaultView;
@@ -24,8 +82,10 @@ export function mountApp(root, d) {
   const shoePending = () => game === 'twins' && !!shoeScene?.state.pending;
   const resetShoe = () => { shoeScene?.dispose(); shoeScene = null; shoeNextButton = null; shoeTransitionId = 0; };
   const shoeStateChanged = () => {
-    if (!disposed && shoeNextButton) shoeNextButton.disabled = shoePending();
+    if (!disposed && shoeNextButton) shoeNextButton.disabled = shoePending() || feedbackWaiting() || busy || practiceSaveFailed;
+    if (!disposed && game==='twins' && feedback && shoeScene?.state.completed && shoeScene.state.transitionId===shoeTransitionId) effects.completeAnimation(roundId);
   };
+  const feedbackWaiting = () => !!feedback && effects.snapshot()?.animationReady === false;
   const requestFrame = d.requestAnimationFrame || view?.requestAnimationFrame.bind(view);
   const cancelFrame = d.cancelAnimationFrame || view?.cancelAnimationFrame.bind(view);
   const reducedTrainMotion = () => !!d.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -73,8 +133,8 @@ export function mountApp(root, d) {
       if (phase.phase === 'burst') frame.particles = trainMotionFireworks(layout.slots, layout.unit, phase.burst);
     }
     ctx.clearRect(0,0,width,height); drawTrainScene(ctx, area, train, frame);
-    if (phase?.done && trainArrival.finish(arrival.id)) trainCarsAlpha = phase.carsAlpha;
-    if (nextButton) nextButton.disabled = !!phase && !phase.done;
+    if (phase?.done && trainArrival.finish(arrival.id)) { trainCarsAlpha = phase.carsAlpha; effects.completeAnimation(roundId); }
+    if (nextButton) nextButton.disabled = (!!phase && !phase.done) || feedbackWaiting() || busy || practiceSaveFailed;
     if (arrival && !phase.done && doc.visibilityState !== 'hidden' && requestFrame) {
       trainFrame = requestFrame(() => drawTrainFrame(token));
     }
@@ -89,40 +149,24 @@ export function mountApp(root, d) {
   const image = (name, alt, cls = '') => {
     const n = node('img', '', cls); n.src = `assets/${name}.png`; n.alt = alt; return n;
   };
-  const cancel = () => { generation++; d.player.stop(); busy = false; heard = false; };
+  const cancel = () => { generation++; effects.cancel(); d.player.stop(); busy = false; heard = false; };
   const commit = next => {
     try { d.repository.save(next); data = next; saveError = ''; return true; }
     catch { saveError = 'Progress could not be saved. Please ask a parent to check browser storage.'; return false; }
   };
   const resetPop = () => { popIndex = null; popAnimations.forEach(a => a.cancel()); popAnimations = []; };
-  const go = target => { resetShoe(); resetTrain(); resetPop(); cancel(); screen = target; question = null; feedback = ''; render(); };
+  const go = target => { practiceSaveFailed=false; resetGarden(); starCelebration.clear(); popFloat.clear(); resetShoe(); resetTrain(); resetPop(); cancel(); screen = target; question = null; feedback = ''; render(); };
   function growth(container) {
-    const names = ['Seedling', 'Little sprout', 'Leaf buddy', 'Flower crown', 'Garden wings', 'Rainbow friend'];
-    const milestones = [0, 8, 20, 40, 70, 110], stage = d.growthStage(data.growthPoints);
-    const panel = node('div', '', 'companion'); panel.append(image('meshy_pip', 'Pip the smiling sprout'));
-    const text = node('div', `Pip: ${names[stage]} · ${data.growthPoints} growth`, 'growth');
-    const meter = node('progress'); meter.max = 1;
-    meter.value = stage < 5 ? Math.min(Math.max((data.growthPoints - milestones[stage]) / (milestones[stage + 1] - milestones[stage]), 0), 1) : 1;
-    meter.setAttribute('aria-label', `Pip’s growth toward ${names[stage < 5 ? stage + 1 : stage]}`);
-    meter.setAttribute('aria-valuetext', `${Math.floor(meter.value * 100)} percent`);
-    text.append(meter);
-    if (stage < 5) text.append(node('p', `${milestones[stage + 1] - data.growthPoints} growth to ${names[stage + 1]}`, 'small'));
-    panel.append(text); container.append(panel);
+    pipCompanion.update({points:data.growthPoints, compact:screen==='play',
+      dense:screen==='play' && (view?.innerWidth || 1024)<600,
+      feedback:feedback || null, reaction:feedback || null,
+      reactionKey:feedback ? roundId : null, encouraging:!!feedback && !feedbackCorrect});
+    container.append(pipCompanion.element);
   }
-  async function listen() {
-    if (!question || disposed || feedback) return;
-    cancel(); const token = generation; helped ||= data.muted;
-    const text = d.questionPrompt(game, question.target, trial);
-    const clips = d.resolveClipTexts(text, d.indexKeys);
-    if (data.muted || !clips) { helped = true; heard = false; render(); return; }
-    busy = true; render();
-    let completed = false;
-    try { completed = await d.player.play(clips); } catch { completed = false; }
-    if (token !== generation || disposed || screen !== 'play') return;
-    busy = false; heard = completed; helped ||= !completed; started = now(); render();
-  }
+  function listen() { effects.listen(); }
   function next() {
-    if (trainPending() || shoePending()) return;
+    if (trainPending() || shoePending() || gardenPending() || feedbackWaiting() || busy || practiceSaveFailed) return;
+    resetGarden(); starCelebration.clear(); roundId++;
     resetTrain(); resetPop();
     if (game === 'train' && feedback.startsWith('Let’s look together:')) train = [];
     cancel(); feedback = ''; selectedTwin = null; trial = data.letterTrial;
@@ -138,15 +182,16 @@ export function mountApp(root, d) {
     }
     helped = data.muted; started = now(); shoe = d.resetShoeAfterCelebration(shoe);
     if (shoe === 0) shoeTransitionId = 0;
-    screen = 'play'; render(); void listen();
+    screen = 'play'; syncPracticeEnvironment(); effects.enterRound({id:roundId,game,target:question.target,trial}); render();
   }
   function choose(id) {
     if (!d.availableGames(data.lettersEnabled).some(x => x.id === id)) return;
-    resetShoe(); resetTrain(); game = id; race = d.startRace(d.createRace()); train = []; shoe = 0; next();
+    resetGarden(); starCelebration.clear(); popFloat.clear(); popSessionId++;
+    resetShoe(); resetTrain(); game = id; raceVisualStarted=now(); race = d.startRace(d.createRace()); train = []; shoe = 0; next();
   }
   function answer(word, index, source = null) {
     if (busy || feedback || !question || screen !== 'play' || disposed) return;
-    if (game === 'race' && race.phase !== 'running') return;
+    if (!raceCanAnswer()) return;
     const correct = word === question.target;
     if (game === 'twins' && correct) {
       if (selectedTwin === null) { selectedTwin = index; render(); return; }
@@ -155,16 +200,22 @@ export function mountApp(root, d) {
     const independent = d.isIndependentAnswer({usedVisualHelp: helped, muted: data.muted,
       voiceReady: heard, game, choices: question.choices});
     let updated = d.recordAnswer(data, question.target, correct, Math.max(0, now() - started), {skill, independent, nowMs: now()});
-    if (correct && game === 'letters') updated = d.plantGardenFlower(updated, question.target).data;
+    let planted = null;
+    if (correct && game === 'letters') { planted = d.plantGardenFlower(updated, question.target); updated = planted.data; }
     // Keep the round locked on a storage failure; never record the same tap twice.
     if (correct) stars++;
+    feedbackCorrect = correct;
     feedback = correct ? (stars % 5 === 0 ? 'Five bright stars!' : 'You found it!') : `Let’s look together: ${question.target}`;
     if (game === 'train' && correct) { train = d.advanceTrain(train, question.target, true); trainCarsAlpha = 1; trainArrival.start(question.target, train.length, source); feedback = train.length === 5 ? 'Five in a row! Fireworks!' : `All aboard, ${question.target}!`; }
     if (correct && game === 'twins') { shoe = d.advanceShoeLacing(shoe, true); shoeTransitionId++; }
     if (game === 'race') race = d.answerRace(race, correct);
-    commit(updated); cancel();
+    const saved = commit(updated); practiceSaveFailed = !saved;
+    if (saved && planted) gardenBloom = {id:roundId, species:planted.species, pending:true};
+    d.player.stop(); busy=false;
     if (d.shouldStartWordPopBurst(game, word, question.target, false)) { popIndex = index; popStarted = now(); }
     render();
+    syncPracticeEnvironment();
+    effects.answer({id:roundId,correct,animationReady:!correct || !['train','twins','letters'].includes(game) || (game==='train'&&!trainPending()) || (game==='twins'&&shoeScene?.state.completed&&shoeScene.state.transitionId===shoeTransitionId) || (game==='letters'&&!gardenPending())});
   }
   function toolbar(shell, title, back) {
     const bar = node('div', '', 'toolbar'); bar.append(button('Back', () => go(back), 'light'), node('h1', title)); shell.append(bar);
@@ -202,22 +253,36 @@ export function mountApp(root, d) {
   }
   function render() {
     if (disposed) return;
+    disposeNativeViews(); stopRaceFrame();
+    if(screen!=='play'||game!=='race'){nativeRaceView?.dispose();nativeRaceView=null;lastRaceVisual=null;}
     parentPanels.forEach(p=>p.dispose()); parentPanels=[];
     shoeNextButton = null;
     if (screen !== 'play' || game !== 'twins') resetShoe();
     stopTrainFrame();
     popAnimations.forEach(a => a.cancel()); popAnimations = [];
-    raceHorses = []; raceClock = null;
+    raceClock = null;
     const shell = node('div', '', `shell ${screen === 'home' ? 'home' : ''}`);
     if (saveError) shell.append(node('p', saveError, 'warning'));
     if (screen === 'home') {
-      shell.append(node('h1', 'Sophia’s Sight Words'));
-      const hero = node('div', '', 'hero'); hero.append(image('meshy_garden', 'Word garden', 'garden'), image('meshy_pip', 'Pip', 'pip')); shell.append(hero);
-      growth(shell); shell.append(node('p', 'Listen. Discover. Grow.'));
-      const actions = node('div', '', 'actions'); actions.append(button('▶ PLAY', () => go('picker')), button('For grown-ups', () => go('gate'), 'secondary')); shell.append(actions);
+      nativeHome=mountHomeLayout({document:doc,growthPoints:data.growthPoints,
+        onPlay:()=>go('picker'),onParent:()=>go('gate'),renderCompanion(options){
+          const c=createPipCompanion(doc,{now,matchMedia:d.matchMedia});c.update(options);return c;}});
+      nativeHome.element.querySelector('.sophia-home-play').setAttribute('aria-label','▶ PLAY');
+      nativeHome.element.querySelector('.sophia-home-parent').setAttribute('aria-label','For grown-ups');
+      Object.assign(shell.style,{height:'100dvh',minHeight:'0',padding:'0',overflow:'hidden'});
+      shell.append(nativeHome.element);
     } else if (screen === 'picker') {
       toolbar(shell, 'Choose a game!', 'home'); const grid = node('div', '', 'grid');
-      for (const g of d.availableGames(data.lettersEnabled)) { const b = button(g.title, () => choose(g.id), 'tile'); b.append(node('span', g.mark, 'mark')); grid.append(b); }
+      const w=root.clientWidth||view.innerWidth,h=view.innerHeight,phone=Math.min(w,h)<500,wide=w>h;
+      const games=d.availableGames(data.lettersEnabled),cols=(phone&&wide)||w>700?3:2,rows=Math.ceil(games.length/cols),gap=phone?8:16,inset=phone?12:20;
+      const tileHeight=Math.max(90,(h-inset*2-48-gap*rows)/rows);
+      const artHeight=phone?Math.max(36,Math.min(wide?76:110,tileHeight-(wide?24:48)-20)):Math.min(180,Math.max(86,(h-112)/rows*.59));
+      grid.style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;grid.style.gap=gap+'px';
+      for(const g of games){
+        const b=button(g.title,()=>choose(g.id),'tile'),art=createAdventureArt({document:doc,game:g.id});
+        const area=node('span','','native-adventure-area');Object.assign(area.style,{display:'block',width:'100%',height:artHeight+'px'});
+        area.append(art.element);b.prepend(area);b.setAttribute('aria-label',g.title);nativeTileArt.push(art);grid.append(b);
+      }
       shell.append(grid); if (!d.activeWords(data).length) shell.append(node('p', 'Ask a grown-up to turn on a word list.', 'warning'));
     } else if (screen === 'gate') {
       toolbar(shell, 'For grown-ups', 'home'); const form = node('form', '', 'gate'), input = node('input'); input.type = 'text'; input.inputMode = 'numeric'; input.setAttribute('aria-label', 'Answer');
@@ -231,23 +296,23 @@ export function mountApp(root, d) {
         const muted = !data.muted;
         if (commit(d.updatePracticeSettings(data, {muted}))) {
           if (muted || busy) helped = true;
-          cancel();
+          syncPracticeEnvironment();
         }
         render();
       }, 'light'));
       // A target becomes visible only when listening evidence cannot be independent.
       shell.append(node('h2', helped || feedback || game === 'twins' ? d.questionPrompt(game, question.target, trial) : 'Listen, then choose.'));
       if (helped) shell.append(node('p', 'Visual practice: this prompt is muted, unsupported, or could not play. It will not count as independent listening.', 'warning'));
-      shell.append(button('Listen again', () => void listen(), 'light', busy || !!feedback), button('Show me', () => { helped = true; render(); }, 'light', busy || !!feedback));
+      shell.append(button('Listen again', () => void listen(), 'light', busy || data.muted), button('Show me', () => { helped = true; render(); }, 'light', busy || !!feedback));
       if (game !== 'train') {
         const count = node('p', `★ ${stars}`, 'star-count');
         count.setAttribute('aria-label', `${stars} stars`); shell.append(count);
       }
       if (game === 'race') {
-        const track = node('div', '', 'tracks');
-        for (let i = 0; i < 16; i++) { const lane = node('div', '', 'lane'); const horse = image(`unicorn_${i}_0`, i === 0 ? 'Your unicorn' : `Unicorn ${i}`); horse.style.left = `${(i === 0 ? race.progress : d.opponentProgress(i - 1, race.elapsedMs)) * 85}%`; lane.append(horse); track.append(lane); raceHorses.push(horse); }
-        raceClock = node('p', race.phase === 'finished' ? `Finished in place ${race.place}` : `${d.secondsLeft(race)} seconds left`);
-        shell.append(track, raceClock);
+        if(!nativeRaceView){nativeRaceView=createUnicornRaceView({document:doc});lastRaceVisual=null;}
+        const area=node('div','','native-race-area');
+        area.style.height=`${Math.max(200,Math.min(360,view.innerHeight*.36))}px`;
+        area.append(nativeRaceView.element);raceClock=node('p',race.phase==='finished'?`Finished in place ${race.place}`:`${d.secondsLeft(race)} seconds left`,'race-clock');shell.append(area,raceClock);updateRaceView();
       }
       if (game === 'train') {
         const scene = node('div', '', 'train train-track'); scene.setAttribute('aria-label', `Train has ${train.length} word cars`);
@@ -273,15 +338,16 @@ export function mountApp(root, d) {
         // Future feedback scheduling can subscribe without writing learning twice.
       }
       if (game === 'letters') {
+        const gardenFlowers = gardenPending() ? data.gardenFlowers.slice(0,-1) : data.gardenFlowers;
         const garden = node('section', '', 'letter-garden');
-        garden.setAttribute('aria-label', `Sophia's flower garden: ${data.gardenTotal} flowers grown. ${Math.min(data.gardenFlowers.length, 7)} flowers visible.`);
+        garden.setAttribute('aria-label', `Sophia's flower garden: ${data.gardenTotal} flowers grown. ${Math.min(gardenFlowers.length, 7)} flowers visible.`);
         garden.style.background = '#e5f3e4'; garden.style.borderRadius = '22px'; garden.style.padding = '12px';
         garden.append(node('p', `Sophia's flower garden • ${data.gardenTotal} grown`));
         const bed = node('div', '', 'garden-bed');
         bed.style.display = 'flex'; bed.style.justifyContent = 'center'; bed.style.borderBottom = '10px solid #b86640';
-        if (!data.gardenFlowers.length) bed.append(node('p', 'Find a letter to grow your first flower!'));
+        if (!gardenFlowers.length) bed.append(node('p', 'Find a letter to grow your first flower!'));
         const names = ['Phalaenopsis orchid', 'Vanda orchid', 'toad lily', 'lady slipper orchid'];
-        for (const species of data.gardenFlowers.slice(-7)) {
+        for (const species of gardenFlowers.slice(-7)) {
           const index = Math.min(Math.max(species, 0), 3);
           const flower = node('div', '', 'garden-flower');
           flower.setAttribute('role', 'img'); flower.setAttribute('aria-label', names[index]);
@@ -295,7 +361,11 @@ export function mountApp(root, d) {
       const choices = node('div', '', 'choices');
       const values = game === 'twins' ? twinItems : question.choices;
       values.forEach((word, i) => {
-        const b = button(word, () => answer(word, i, trainSource(b)), `choice${selectedTwin === i ? ' correct' : ''}${feedback && word === question.target ? ' correct' : ''}`, busy || !!feedback || (game === 'race' && race.phase === 'finished'));
+        const b = button(word, () => answer(word, i, trainSource(b)), `choice${selectedTwin === i ? ' correct' : ''}${feedback && word === question.target ? ' correct' : ''}`, busy || !!feedback || !raceCanAnswer());
+        if (game === 'letters' && gardenBloom && word === question.target) {
+          letterBloom.play({target:b, species:gardenBloom.species, transitionId:gardenBloom.id,
+            compact:(view?.innerWidth || 1024)<600, onComplete:gardenComplete});
+        }
         if (game === 'pop') {
           // Native choiceButton fades/expands only the shell; the word stays readable.
           b.style.position = 'relative'; b.style.isolation = 'isolate'; b.style.background = 'transparent';
@@ -314,43 +384,76 @@ export function mountApp(root, d) {
             ], {duration:duration * (1 - progress),easing:'linear',fill:'forwards'}));
           }
           b.append(layer);
+          // Float the visual word and shell together, leaving the hit target fixed.
+          const visual = node('span', '', 'pop-float-visual');
+          Object.assign(visual.style, {position:'absolute', inset:'0', padding:'inherit',
+            display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none',
+            borderRadius:'inherit', isolation:'isolate'});
+          while (b.firstChild) visual.append(b.firstChild);
+          const spacer = node('span', '', 'pop-size-spacer');
+          spacer.dataset.word = word; spacer.setAttribute('aria-hidden','true');
+          b.append(spacer, visual);
         }
         choices.append(b);
       });
+      if (game === 'pop') popFloat.update({choiceId:popSessionId, elements:[...choices.querySelectorAll('.pop-float-visual')]});
       shell.append(choices, node('p', busy ? 'Listening…' : feedback, 'status'));
-      if (feedback || (game === 'race' && race.phase === 'finished')) {
-        const nextButton = button(game === 'race' && race.phase === 'finished' ? 'Race again' : 'Next', () => {
-          if (trainPending() || shoePending()) return;
+      if (feedback || raceTerminal()) {
+        const buttonRound = roundId;
+        const nextButton = button(raceTerminal() ? 'Race again' : 'Next', () => {
+          if(buttonRound!==roundId || busy || practiceSaveFailed) return;
+          if (trainPending() || shoePending() || gardenPending() || feedbackWaiting()) return;
           if (game === 'race' && race.phase === 'finished') race = d.startRace(d.createRace());
           if (train.length === 5) train = []; next();
-        }, '', trainPending() || shoePending());
+        }, '', trainPending() || shoePending() || gardenPending() || feedbackWaiting() || busy || practiceSaveFailed);
         if (game === 'twins') shoeNextButton = nextButton;
         if (trainView) trainView.nextButton = nextButton;
         shell.append(nextButton);
       }
       growth(shell);
     }
+    if (screen === 'play' && question) {
+      shell.style.position = 'relative';
+      starCelebration.show({host:shell, celebrationId:roundId, game,
+        correct:feedbackCorrect, stars, feedback:!!feedback});
+    } else {
+      starCelebration.clear(); popFloat.clear();
+      pipCompanion.update({feedback:null,reaction:null,reactionKey:null});
+    }
+    if(screen==='picker'||screen==='play'){
+      shell.style.position='relative';shell.style.isolation='isolate';
+      nativeBackground=createSceneBackground({document:doc,game:screen==='play'?game:'find',storybook:screen==='play'});
+      nativeBackground.element.style.zIndex='-1';shell.prepend(nativeBackground.element);
+    }
     root.replaceChildren(shell);
+    if(nativeRaceView)drawRaceFrame();
     shoeScene?.redraw();
     if (trainView) drawTrainFrame();
   }
   const tick = () => {
     if (!disposed && screen === 'play' && game === 'race' && !busy && !feedback && doc.visibilityState !== 'hidden') {
       race = d.tickRace(race, 100);
-      if (race.phase === 'finished') render();
+      if (race.phase === 'finished') { syncPracticeEnvironment(); render(); }
       else {
-        raceHorses.forEach((horse, i) => { horse.style.left = `${(i === 0 ? race.progress : d.opponentProgress(i - 1, race.elapsedMs)) * 85}%`; });
-        if (raceClock) raceClock.textContent = `${d.secondsLeft(race)} seconds left`;
+        updateRaceView();
       }
     }
   };
+  const raceMotionPreference=d.matchMedia?.('(prefers-reduced-motion: reduce)');
+  const motionChanged=()=>{stopRaceFrame();drawRaceFrame();};
+  raceMotionPreference?.addEventListener?.('change',motionChanged);
   const timer = d.setInterval ? d.setInterval(tick, 100) : null;
-  const hidden = () => { if (doc.visibilityState === 'hidden') { cancel(); helped = true; render(); } else if (trainView) render(); };
-  const resized = () => { if (trainView && !disposed) { render(); } };
+  const hidden = () => { if(disposed)return; if(doc.visibilityState==='hidden')helped=true;syncPracticeEnvironment();render(); };
+  let layoutWidth = view?.innerWidth;
+  const resized = () => {
+    if (disposed) return;
+    const widthChanged = view?.innerWidth !== layoutWidth; layoutWidth = view?.innerWidth;
+    if (trainView || (widthChanged && (screen === 'play' || screen === 'home' || screen === 'picker'))) render();
+  };
   view?.addEventListener('resize', resized);
   doc.addEventListener('visibilitychange', hidden); render();
-  return {dispose() { if (disposed) return; parentPanels.forEach(p=>p.dispose()); parentPanels=[]; disposed = true; resetShoe(); resetTrain(); resetPop(); cancel(); view?.removeEventListener('resize', resized); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
-    getState() { return structuredClone({data, screen, game, feedback, busy, heard, helped, shoe:shoeScene?.state ?? null}); }};
+  return {dispose() { if (disposed) return; raceMotionPreference?.removeEventListener?.('change',motionChanged);stopRaceFrame();nativeRaceView?.dispose();nativeRaceView=null;disposeNativeViews();effects.dispose(); letterBloom.dispose(); starCelebration.dispose(); popFloat.dispose(); pipCompanion.dispose(); parentPanels.forEach(p=>p.dispose()); parentPanels=[]; disposed = true; resetShoe(); resetTrain(); resetPop(); cancel(); view?.removeEventListener('resize', resized); doc.removeEventListener('visibilitychange', hidden); if (timer !== null) d.clearInterval(timer); },
+    getState() { return structuredClone({data, screen, game, feedback, busy, heard, helped, shoe:shoeScene?.state ?? null, effects:effects.snapshot(), round:roundId, presentation:{roundId, garden:gardenBloom, bloom:letterBloom.snapshot(), pip:pipCompanion.snapshot(), pop:popFloat.snapshot()}}); }};
 }
 
 export async function bootstrap(root, env = globalThis) {

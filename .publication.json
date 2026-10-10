@@ -3,8 +3,8 @@
   "entries": [
     {
       "path": "app.mjs",
-      "bytes": 26673,
-      "sha256": "44684821b3a9ef9e4ec4a853ea3ea22bcb8b4edc3d81ccb494af32ebb71b2d2f"
+      "bytes": 34495,
+      "sha256": "93c43c044708e56f1a320af763ec4af2271f732c9aed8bb0f0bbedd764c8afac"
     },
     {
       "path": "assets/garden_flowers.png",
@@ -683,8 +683,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 410,
-      "sha256": "c4f964a3c5166d3515fcb665071500b3389d83a513842c64722536ba225520ba"
+      "bytes": 458,
+      "sha256": "c377e91e861f5f031543eff36cc4ac4598c1a6be1f0dcd243d665c3b303a3d15"
     },
     {
       "path": "narration-paths.mjs",
@@ -1173,8 +1173,8 @@
     },
     {
       "path": "style.css",
-      "bytes": 5955,
-      "sha256": "8c43d60347d8262c190fe408b7a5365ae9fc0f40fd22ca33b50f9537459814fe"
+      "bytes": 6140,
+      "sha256": "566b4af8e88dbd6e40b47f6e38cd172fa54ea0663658394d281b6ea9ae432608"
     },
     {
       "path": "words.mjs",
@@ -1270,6 +1270,56 @@
       "path": "parent-progress.css",
       "bytes": 793,
       "sha256": "00026bc63a1542394fc558e025c1fbfdf8acd965464d1e0d48fb59d35caade82"
+    },
+    {
+      "path": "practice-effects.mjs",
+      "bytes": 5004,
+      "sha256": "6eb37f4fa33612bef8236504642c8ac7802b6ff3d3142d7546cebf73530d0217"
+    },
+    {
+      "path": "pip-companion.mjs",
+      "bytes": 6363,
+      "sha256": "21fea1b66ba7f3ef260798cf7eac57ca2089ac32051c8eaf3a80945b05312e80"
+    },
+    {
+      "path": "pip-companion.css",
+      "bytes": 3001,
+      "sha256": "253218dca2364f723498db8b7157cfd3186f68458b6d5560f4329002a6d6563b"
+    },
+    {
+      "path": "letter-bloom.mjs",
+      "bytes": 5495,
+      "sha256": "bf61155e5bfaf1f48b40bc3a76df8e5c6455b3640b1ec7c41e36ae174235f0b5"
+    },
+    {
+      "path": "star-celebration.mjs",
+      "bytes": 4925,
+      "sha256": "da47a4ddba35b4aa8e88267b9201ee7ef744444f9b9d916100861ec9dd984a7e"
+    },
+    {
+      "path": "word-pop-float.mjs",
+      "bytes": 3544,
+      "sha256": "1ddfee36fa702ca38480c88935b5105aac9cbdc7ba2e1f4349289fa76d1ee1bf"
+    },
+    {
+      "path": "scene-background.mjs",
+      "bytes": 3899,
+      "sha256": "637f05036012e4550ee9696465ff00a4dc323bbd650544a320ccfe38e790dfff"
+    },
+    {
+      "path": "adventure-art.mjs",
+      "bytes": 4854,
+      "sha256": "1bf1bd94a5c3d28177dcda2eaa25612ca49f402be367be53b95b04be0770ad0c"
+    },
+    {
+      "path": "home-layout.mjs",
+      "bytes": 7961,
+      "sha256": "4a1dd3902de1e8710e13c58ff7d65acb7c19bd1273bb6a0a2a7690f86f8dfb10"
+    },
+    {
+      "path": "unicorn-race-view.mjs",
+      "bytes": 7811,
+      "sha256": "6b10dfbd78ad769549ef45bdd962c27d6d2fab07f19fca1dde61daf121a11615"
     }
   ]
 }
