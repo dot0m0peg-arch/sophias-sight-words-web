@@ -5,6 +5,7 @@ export function mountApp(root, d) {
   let generation = 0, busy = false, heard = false, helped = false, feedback = '', saveError = '';
   let skill = 'word', trial = 0, started = 0, disposed = false, selectedTwin = null, twinItems = [];
   let race = d.createRace(), train = [], shoe = 0, gate = [4, 7];
+  let raceHorses = [], raceClock = null;
   const now = d.now || Date.now;
   const node = (tag, text = '', cls = '') => {
     const n = doc.createElement(tag); n.textContent = text; n.className = cls; return n;
@@ -118,6 +119,7 @@ export function mountApp(root, d) {
   }
   function render() {
     if (disposed) return;
+    raceHorses = []; raceClock = null;
     const shell = node('div', '', `shell ${screen === 'home' ? 'home' : ''}`);
     if (saveError) shell.append(node('p', saveError, 'warning'));
     if (screen === 'home') {
@@ -151,8 +153,9 @@ export function mountApp(root, d) {
       shell.append(button('Listen again', () => void listen(), 'light', busy || !!feedback), button('Show me', () => { helped = true; render(); }, 'light', busy || !!feedback));
       if (game === 'race') {
         const track = node('div', '', 'tracks');
-        for (let i = 0; i < 16; i++) { const lane = node('div', '', 'lane'); const horse = image(`unicorn_${i}_0`, i === 0 ? 'Your unicorn' : `Unicorn ${i}`); horse.style.left = `${(i === 0 ? race.progress : d.opponentProgress(i - 1, race.elapsedMs)) * 85}%`; lane.append(horse); track.append(lane); }
-        shell.append(track, node('p', race.phase === 'finished' ? `Finished in place ${race.place}` : `${d.secondsLeft(race)} seconds left`));
+        for (let i = 0; i < 16; i++) { const lane = node('div', '', 'lane'); const horse = image(`unicorn_${i}_0`, i === 0 ? 'Your unicorn' : `Unicorn ${i}`); horse.style.left = `${(i === 0 ? race.progress : d.opponentProgress(i - 1, race.elapsedMs)) * 85}%`; lane.append(horse); track.append(lane); raceHorses.push(horse); }
+        raceClock = node('p', race.phase === 'finished' ? `Finished in place ${race.place}` : `${d.secondsLeft(race)} seconds left`);
+        shell.append(track, raceClock);
       }
       if (game === 'train') {
         const scene = node('div', '', 'train'); scene.setAttribute('aria-label', `Train has ${train.length} word cars`);
@@ -197,7 +200,14 @@ export function mountApp(root, d) {
     root.replaceChildren(shell);
   }
   const tick = () => {
-    if (!disposed && screen === 'play' && game === 'race' && !busy && !feedback && doc.visibilityState !== 'hidden') { race = d.tickRace(race, 100); render(); }
+    if (!disposed && screen === 'play' && game === 'race' && !busy && !feedback && doc.visibilityState !== 'hidden') {
+      race = d.tickRace(race, 100);
+      if (race.phase === 'finished') render();
+      else {
+        raceHorses.forEach((horse, i) => { horse.style.left = `${(i === 0 ? race.progress : d.opponentProgress(i - 1, race.elapsedMs)) * 85}%`; });
+        if (raceClock) raceClock.textContent = `${d.secondsLeft(race)} seconds left`;
+      }
+    }
   };
   const timer = d.setInterval ? d.setInterval(tick, 100) : null;
   const hidden = () => { if (doc.visibilityState === 'hidden') { cancel(); helped = true; render(); } };
