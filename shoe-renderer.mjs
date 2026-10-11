@@ -56,8 +56,23 @@ export function createShoeRenderer(canvas, {mesh, texture, fixedLaces = []} = {}
   if (!Array.isArray(fixedLaces) || ![0,2].includes(fixedLaces.length)) throw new TypeError('Two fixed laces required');
   const shoe = geometry(mesh, true), fixed = fixedLaces.map(g => geometry(g));
   if (!texture || !(texture.width > 0 && texture.height > 0)) throw new TypeError('Decoded original texture required');
-  const gl = canvas.getContext('webgl', {alpha: true, antialias: true, premultipliedAlpha: false});
-  if (!gl) throw new Error('WebGL is unavailable');
+  // Some supported devices reject multisampling while ordinary WebGL still works.
+  // Keep the exact authored scene; retry only the context attribute, not the art.
+  let gl, creationReason = '';
+  const creationFailed = event => { creationReason = event.statusMessage || creationReason; };
+  canvas.addEventListener('webglcontextcreationerror', creationFailed);
+  try {
+    for (const antialias of [true, false]) {
+      try { gl = canvas.getContext('webgl', {alpha: true, antialias, premultipliedAlpha: false}); }
+      catch (error) { creationReason = error.message; }
+      if (gl) break;
+    }
+  } finally { canvas.removeEventListener('webglcontextcreationerror', creationFailed); }
+  if (!gl) {
+    const error = new Error('WebGL is unavailable' + (creationReason ? ': ' + creationReason : ''));
+    error.code = 'webgl-unavailable';
+    throw error;
+  }
   let disposed = false, lost = false, program, image, locations, staticBuffers = [], movingBuffers = [];
   let moving = [], objects = [], textures = [], programs = [], shaders = [];
   const checkLive = () => { if (disposed) throw new Error('Shoe renderer disposed'); };

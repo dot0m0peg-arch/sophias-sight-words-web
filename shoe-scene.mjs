@@ -74,7 +74,7 @@ export function createShoeScene({document = globalThis.document, stage = 0, tran
   element.style.cssText = 'display:flex;position:relative;width:100%;height:100%;min-width:0;gap:0;color:rgb(24,63,68)';
   const viewport = el('div', 'shoe-viewport', element);
   viewport.style.cssText = 'position:relative;flex:0 0 68%;height:100%;min-width:0';
-  const canvas = el('canvas', 'shoe-canvas', viewport);
+  let canvas = el('canvas', 'shoe-canvas', viewport);
   canvas.style.cssText = 'display:block;width:100%;height:100%';
   canvas.setAttribute('role', 'img'); canvas.dataset.testid = 'shoe-lacing-stage';
   canvas.setAttribute('aria-label', 'A sneaker with teal and coral shoelaces');
@@ -96,7 +96,18 @@ export function createShoeScene({document = globalThis.document, stage = 0, tran
   status.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)';
   status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
 
-  let renderer, data, disposed = false, failed = null, lost = false, raf = 0;
+  // Recovery stays inside the scene so a temporary failure cannot strand a
+  // correctly answered matching round or require resetting its saved progress.
+  const recovery = el('div', 'shoe-recovery', viewport);
+  recovery.style.cssText = 'position:absolute;inset:4px;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;text-align:center;padding:8px;background:#fff8e8;overflow:auto';
+  const recoveryMessage = el('p', 'shoe-recovery-message', recovery);
+  recoveryMessage.style.cssText = 'margin:0;font-size:14px;line-height:1.3';
+  const retryButton = el('button', 'shoe-retry', recovery);
+  retryButton.type = 'button'; retryButton.textContent = 'Try shoe again';
+  retryButton.style.cssText = 'min-height:44px;padding:8px 14px;cursor:pointer';
+  let renderer, data, disposed = false, failed = null, failureCode = null, lost = false, raf = 0;
+  let lease, ready, loadGeneration = 0;
+  const assetURL = new URL(assetBase, document.baseURI);
   let began = null, elapsed = 0, frame = -1, completed = false, lastState = '';
   const media = win.matchMedia?.('(prefers-reduced-motion: reduce)');
   let reduced = !!media?.matches;
@@ -107,7 +118,7 @@ export function createShoeScene({document = globalThis.document, stage = 0, tran
       : pending && elapsed < 1200 ? 'moving' : pending && stage === 7 ? 'celebrating' : 'ready';
     return Object.freeze({stage, transitionId, phase, ready, pending, frame, elapsedMs: elapsed,
       moving: ready && phase === 'moving' && !reduced, celebrating: ready && phase === 'celebrating',
-      reducedMotion: reduced, completed, error: failed?.message ?? null});
+      reducedMotion: reduced, completed, error: failed?.message ?? null, errorCode: failureCode});
   }
   function notify() {
     const s = state();
@@ -118,7 +129,15 @@ export function createShoeScene({document = globalThis.document, stage = 0, tran
     const key = [stage, transitionId, s.phase, reduced, completed, s.error].join(':');
     if (key === lastState) return;
     lastState = key;
-    status.textContent = s.phase === 'error' ? 'The shoe could not load. Please return and try again.'
+    const errorMessage = failureCode === 'webgl-unavailable'
+      ? 'This browser could not start the 3D shoe. Try again, or open this game in another browser.'
+      : 'The shoe could not load. Try the shoe again.';
+    const recoverable = s.phase === 'error' || s.phase === 'context-lost';
+    recovery.style.display = recoverable ? 'flex' : 'none';
+    recoveryMessage.textContent = s.phase === 'context-lost'
+      ? 'The shoe display is recovering. You can try it again.' : errorMessage;
+    retryButton.disabled = disposed || (!failed && !lost);
+    status.textContent = s.phase === 'error' ? errorMessage
       : s.phase === 'loading' ? 'Loading the shoe' : s.phase === 'context-lost' ? 'The shoe display is recovering'
       : s.celebrating ? 'The shoe is tied!' : s.moving ? 'The shoelaces are moving' : TITLES[stage];
     status.dataset.testid = s.celebrating ? 'shoe-lacing-celebration' : s.moving ? 'shoe-lacing-transition' : 'shoe-lacing-status';
@@ -128,7 +147,9 @@ export function createShoeScene({document = globalThis.document, stage = 0, tran
   function cancelFrame() { if (raf) win.cancelAnimationFrame(raf); raf = 0; }
   function fail(error) {
     if (disposed || failed) return;
-    failed = error instanceof Error ? error : new Error(String(error)); cancelFrame();
+    failed = error instanceof Error ? error : new Error(String(error));
+    failureCode = error?.code === 'webgl-unavailable' ? 'webgl-unavailable' : data ? 'shoe-render' : 'shoe-assets';
+    cancelFrame();
     renderer?.dispose(); renderer = null; overlay.style.display = 'none'; notify();
   }
   function celebration(progress, visible) {
@@ -195,16 +216,52 @@ export function createShoeScene({document = globalThis.document, stage = 0, tran
   }
   function rendererError(event) { fail(event.detail); }
   function dispose() {
-    if (disposed) return; disposed = true; cancelFrame(); lease.release(); observer?.disconnect();
+    if (disposed) return; disposed = true; loadGeneration++; cancelFrame(); lease?.release(); observer?.disconnect();
     document.removeEventListener('visibilitychange', visibility); win.removeEventListener('resize', redraw);
     media?.removeEventListener?.('change', motion);
     canvas.removeEventListener('webglcontextlost', contextLost);
     canvas.removeEventListener('webglcontextrestored', contextRestored);
     canvas.removeEventListener('shoe-render-error', rendererError);
-    renderer?.dispose(); renderer = null; data = null; overlay.style.display = 'none';
+    renderer?.dispose(); renderer = null; data = null; overlay.style.display = 'none'; recovery.style.display = 'none';
+    retryButton.removeEventListener('click', retryClicked);
     element.dataset.phase = 'disposed'; // No callbacks from a canceled/disposed view.
   }
-  const lease = acquire(new URL(assetBase, document.baseURI), win);
+  function retryClicked() { void retry(); }
+  function retry() {
+    if (disposed || (!failed && !lost)) return Promise.resolve(false);
+    cancelFrame(); lease?.release(); renderer?.dispose(); renderer = null;
+    // A lost/failed WebGL context is tied to its canvas. Replace that canvas only;
+    // retain the original scene, selected stage, transition ID and completion seal.
+    const prior = canvas;
+    prior.removeEventListener('webglcontextlost', contextLost);
+    prior.removeEventListener('webglcontextrestored', contextRestored);
+    prior.removeEventListener('shoe-render-error', rendererError);
+    canvas = prior.cloneNode(false);
+    prior.replaceWith(canvas);
+    canvas.addEventListener('webglcontextlost', contextLost);
+    canvas.addEventListener('webglcontextrestored', contextRestored);
+    canvas.addEventListener('shoe-render-error', rendererError);
+    failed = null; failureCode = null; lost = false; data = null;
+    began = null; elapsed = 0; frame = -1; lastState = '';
+    notify(); ready = load(); return ready;
+  }
+  function load() {
+    const generation = ++loadGeneration;
+    lease = acquire(assetURL, win);
+    return lease.promise.then(value => {
+      if (disposed || generation !== loadGeneration) return false;
+      data = value;
+      try {
+        renderer = createShoeRenderer(canvas, value);
+        began = now() - (completed ? 3000 : 0);
+        return redraw() && !failed;
+      } catch (error) { fail(error); return false; }
+    }, error => {
+      if (disposed || generation !== loadGeneration) return false;
+      fail(error); return false;
+    });
+  }
+  retryButton.addEventListener('click', retryClicked);
   document.addEventListener('visibilitychange', visibility); win.addEventListener('resize', redraw);
   media?.addEventListener?.('change', motion);
   canvas.addEventListener('webglcontextlost', contextLost);
@@ -213,13 +270,8 @@ export function createShoeScene({document = globalThis.document, stage = 0, tran
   const observer = win.ResizeObserver ? new win.ResizeObserver(() => redraw()) : null;
   observer?.observe(viewport);
   update(stage, transitionId);
-  const ready = lease.promise.then(value => {
-    if (disposed) return false;
-    data = value;
-    try {
-      renderer = createShoeRenderer(canvas, value); began = now();
-      return redraw() && !failed;
-    } catch (error) { fail(error); return false; }
-  }, error => { fail(error); return false; });
-  return Object.freeze({element, canvas, ready, update, redraw, dispose, get state() { return state(); }});
+  ready = load();
+  return Object.freeze({element, get canvas() { return canvas; }, get ready() { return ready; },
+    update, redraw, retry, dispose, get state() { return state(); }});
+
 }

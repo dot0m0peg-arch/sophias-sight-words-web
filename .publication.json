@@ -1218,13 +1218,13 @@
     },
     {
       "path": "shoe-renderer.mjs",
-      "bytes": 10072,
-      "sha256": "0e88647a87bc1a0b4a3555c7a58d9f84bdf5e07f42fc57e5aad61722f9a1f11f"
+      "bytes": 10972,
+      "sha256": "ade17e89b9e6583a9f878aa728929c20ce5f0c3ffd7dfb57c4a24a9383e89ac0"
     },
     {
       "path": "shoe-scene.mjs",
-      "bytes": 13179,
-      "sha256": "c041eee7ad8c5916402ba64b82d285bd545de48b94272704ea4bbb5e4a4dee26"
+      "bytes": 16485,
+      "sha256": "1f11a4ea17cff2ced046d3ce99c0e7f02a92174f63b70a17396628790a1993b9"
     },
     {
       "path": "assets/shoe/shoe.mesh",
@@ -1318,8 +1318,8 @@
     },
     {
       "path": "unicorn-race-view.mjs",
-      "bytes": 7811,
-      "sha256": "6b10dfbd78ad769549ef45bdd962c27d6d2fab07f19fca1dde61daf121a11615"
+      "bytes": 8289,
+      "sha256": "46ffdce55e029930e3391ee7f7de392ee5e64f667198393ec5742c0b6b869466"
     }
   ]
 }

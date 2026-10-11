@@ -37,7 +37,7 @@ export function createUnicornRaceView({document:doc}) {
   const names=[];
   for(let index=1;index<6;index++){
     stage.append(sprites[index]);const label=doc.createElement('span');label.textContent=unicornRoster[index];label.dataset.name=String(index);
-    Object.assign(label.style,{position:'absolute',left:'6px',fontWeight:'700',whiteSpace:'nowrap'});stage.append(label);names.push(label);
+    Object.assign(label.style,{position:'absolute',left:'6px',fontWeight:'700',whiteSpace:'normal',lineHeight:'1.1'});stage.append(label);names.push(label);
   }
   const trails=['#ff2d55','#ffcc00','#30b0c7','#af52de'].map(color=>{
     const n=doc.createElement('i');n.dataset.part='boost-trail';Object.assign(n.style,{position:'absolute',borderRadius:'999px',background:color});stage.append(n);return n;
@@ -48,18 +48,24 @@ export function createUnicornRaceView({document:doc}) {
   const attrs=(node,values)=>{for(const [k,v] of Object.entries(values))node.setAttribute(k,String(v));};
   function place() {
     if(disposed)return;const {width:w,height:h}=stage.getBoundingClientRect();if(w<=0||h<=0)return;
+    // Reserve a label gutter and fit the foreground art to the remaining track.
+    // The caller still owns progress; resizing must never change race state.
+    const gutter=Math.min(140,Math.max(82,w*.28));
+    const frontScale=Math.min(1,(w-gutter-16)*.46/(h*.35*1.65));
+    const heroWidth=h*.35*frontScale*1.65;
+    const startX=gutter+heroWidth/2+8,finishX=Math.max(startX,w-heroWidth/2-8);
     svg.setAttribute('viewBox','0 0 '+w+' '+h);attrs(sky,{width:w,height:h});attrs(sun,{cx:w*.86,cy:h*.05,r:h*.15});
     attrs(grass,{width:w,height:h*.20,y:h*.08});attrs(track,{width:w,height:h*.83,y:h*.17});
     lanes.forEach((n,i)=>attrs(n,{width:w,y:h*(.37+i*.103)}));
-    checks.forEach((n,i)=>attrs(n,{width:h*.043,height:h*.043,x:w*.75+(i%2)*h*.043,y:h*.17+Math.floor(i/2)*h*.043}));
+    checks.forEach((n,i)=>attrs(n,{width:h*.043,height:h*.043,x:finishX+(i%2)*h*.043,y:h*.17+Math.floor(i/2)*h*.043}));
     for(let index=0;index<16;index++){
-      const height=h*(index===0?.35:index<6?.21:.16),progress=index===0?state.race.progress:state.opponents[index-1];
+      const height=h*(index===0?.35*frontScale:index<6?.21*frontScale:.16),progress=index===0?state.race.progress:state.opponents[index-1];
       const y=index===0?h*.775:index<6?h*(.435+(index-1)*.103)-h*.105:h*(.22+((index-6)%3)*.044)-h*.08;
-      Object.assign(sprites[index].style,{width:height*1.65+'px',height:height+'px',left:w*.25+w*.5*progress+'px',top:y+'px'});
+      Object.assign(sprites[index].style,{width:height*1.65+'px',height:height+'px',left:startX+(finishX-startX)*progress+'px',top:y+'px'});
     }
-    names.forEach((n,i)=>Object.assign(n.style,{top:h*(.435+i*.103)+h*.015+'px',fontSize:Math.min(Math.max(h*.035,9),12)+'px'}));
-    trails.forEach((n,i)=>Object.assign(n.style,{width:h*.24+'px',height:h*.016+'px',left:w*.25+w*.5*state.race.progress-h*.3+'px',top:h*.87+i*h*.023+'px'}));
-    sophia.style.top=h*.955+'px';
+    names.forEach((n,i)=>Object.assign(n.style,{top:h*(.33+i*.103)+'px',transform:'translateY(-50%)',maxWidth:gutter-12+'px',fontSize:Math.min(Math.max(h*.035,9),12)+'px'}));
+    trails.forEach((n,i)=>Object.assign(n.style,{width:h*.24+'px',height:h*.016+'px',left:Math.max(gutter+6,startX+(finishX-startX)*state.race.progress-heroWidth*.65)+'px',top:h*.87+i*h*.023+'px'}));
+    sophia.style.top='auto';sophia.style.bottom='6px';
   }
   function update({race,frame,opponents,secondsLeft}) {
     if(disposed)return;
