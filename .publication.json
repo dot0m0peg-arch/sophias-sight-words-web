@@ -2,6 +2,11 @@
   "schema": 1,
   "entries": [
     {
+      "path": "adventure-art.mjs",
+      "bytes": 4854,
+      "sha256": "1bf1bd94a5c3d28177dcda2eaa25612ca49f402be367be53b95b04be0770ad0c"
+    },
+    {
       "path": "app.mjs",
       "bytes": 34495,
       "sha256": "93c43c044708e56f1a320af763ec4af2271f732c9aed8bb0f0bbedd764c8afac"
@@ -20,6 +25,41 @@
       "path": "assets/meshy_pip.png",
       "bytes": 87510,
       "sha256": "b9efb882ce65920e9040174d6274ffeae2ae15598d47ae91cf43080318a5f5f1"
+    },
+    {
+      "path": "assets/shoe/anchors.json",
+      "bytes": 3035,
+      "sha256": "1ce2ea1eeb5008373a47d09b2114e4ae93ef5ede283ab5ffdacaa07ff2ac2661"
+    },
+    {
+      "path": "assets/shoe/asset-manifest.json",
+      "bytes": 1846,
+      "sha256": "9dee8a53bebe1b303e485772912a7cc120f181c4812c4cd39c9741b082fab83b"
+    },
+    {
+      "path": "assets/shoe/motion.bin",
+      "bytes": 2501568,
+      "sha256": "8408c9386a8a1949fd589ef1c8ce494c7a2d689de03794e820abb4028028b527"
+    },
+    {
+      "path": "assets/shoe/provenance.json",
+      "bytes": 1374,
+      "sha256": "8c89382acc230a1492bd9b8750a22a5ad79e7f332b25b093ae7f6154bd78cabb"
+    },
+    {
+      "path": "assets/shoe/shoe.mesh",
+      "bytes": 500410,
+      "sha256": "146a91396054d7f4f55a3196d42840e7c75dc48a62c6de500b3e5ed258923b28"
+    },
+    {
+      "path": "assets/shoe/shoe.png",
+      "bytes": 1651461,
+      "sha256": "c699f54321b5de646f2f0317801c0e4904f3b803b9b2a27ea2d65a4513e32ca5"
+    },
+    {
+      "path": "assets/shoe/threading.json",
+      "bytes": 13291,
+      "sha256": "113b0b83b398a06e32b72ea9dcd661ce266f970f14c2a645be5ba77701f6c1db"
     },
     {
       "path": "assets/unicorn_0_0.png",
@@ -682,19 +722,24 @@
       "sha256": "093e2aa7adc86d4ffd26d438e94986094d5c8ffb6637b592011ccf72bc64668b"
     },
     {
+      "path": "home-layout.mjs",
+      "bytes": 7961,
+      "sha256": "4a1dd3902de1e8710e13c58ff7d65acb7c19bd1273bb6a0a2a7690f86f8dfb10"
+    },
+    {
       "path": "index.html",
       "bytes": 458,
       "sha256": "c377e91e861f5f031543eff36cc4ac4598c1a6be1f0dcd243d665c3b303a3d15"
     },
     {
-      "path": "narration-paths.mjs",
-      "bytes": 646,
-      "sha256": "649b883e33578eb6d5a5aa0f863ac7bcc8264e185d230aed3f6b323918c3af09"
+      "path": "letter-bloom.mjs",
+      "bytes": 5495,
+      "sha256": "bf61155e5bfaf1f48b40bc3a76df8e5c6455b3640b1ec7c41e36ae174235f0b5"
     },
     {
       "path": "narration/index.json",
-      "bytes": 3993,
-      "sha256": "d29b8bb8674625968935d82892a9d365551f8793d2c41cb2d3666b51a35bafa2"
+      "bytes": 5915,
+      "sha256": "031299ae53836a873af65d2a5395a63cc1f637f4c34e8a24c015ff6b367a6ca6"
     },
     {
       "path": "narration/voice_00.mp3",
@@ -1122,14 +1167,394 @@
       "sha256": "b0e228832cb4e2579b390aaf4a01b103b6a144d3ffa460d9bddbb0f5cc62dfe8"
     },
     {
+      "path": "narration/word_all.mp3",
+      "bytes": 5708,
+      "sha256": "3855f87a74a6ff1cd17760d2a06d1b601ba6d38f5fc4ada1c879a03e33b1a936"
+    },
+    {
+      "path": "narration/word_are.mp3",
+      "bytes": 5708,
+      "sha256": "852532fd22b801e24301a6ad5242c11405da1ff800e80c53a143d53917b059dd"
+    },
+    {
+      "path": "narration/word_at.mp3",
+      "bytes": 4652,
+      "sha256": "e8a94d88bdbc1a1b76d0fa8bbe622b5acf39636fafa6a55b25d74c8d372f4af9"
+    },
+    {
+      "path": "narration/word_away.mp3",
+      "bytes": 5924,
+      "sha256": "013bb90b6192c1e57f8c00e78d22fd49923bdbc0f281927f01b1b4a9e2c733d2"
+    },
+    {
+      "path": "narration/word_be.mp3",
+      "bytes": 4964,
+      "sha256": "7a4607f9b4577ab0843fb5b9246a0f1076744fc711151f79fc028b31d7bbd090"
+    },
+    {
+      "path": "narration/word_black.mp3",
+      "bytes": 6428,
+      "sha256": "c41727a38437f95656f29329ae14416bbc5e0bb0de59ee22729bc117446d5a9b"
+    },
+    {
+      "path": "narration/word_brown.mp3",
+      "bytes": 5996,
+      "sha256": "0137e3a331bbd2d2887f3da90af929f9e44c13862bd9f6bc5a3fb69009dac7ff"
+    },
+    {
+      "path": "narration/word_can.mp3",
+      "bytes": 5084,
+      "sha256": "bd20d8256a3df8a5fa724832be1db0552efa191a19496520106c8ab7bfdf7816"
+    },
+    {
+      "path": "narration/word_come.mp3",
+      "bytes": 5852,
+      "sha256": "2e94ac557ceef3e2885b5cf6ef2c278102ef38ae9ffcd4aec860b2cec5bbe704"
+    },
+    {
+      "path": "narration/word_do.mp3",
+      "bytes": 5708,
+      "sha256": "be84d140a74ad465ef121a5ade2d4a4ed71bd11022b8688d4718179c103554a7"
+    },
+    {
+      "path": "narration/word_does.mp3",
+      "bytes": 6284,
+      "sha256": "27171965be53124e23d259e7ff993d6b06715544c8af4d543fd135cca95f93c2"
+    },
+    {
+      "path": "narration/word_down.mp3",
+      "bytes": 5276,
+      "sha256": "65e9f0728dcddc3114cf2bb819331be30068733c19c32703a094e75e38af83d1"
+    },
+    {
+      "path": "narration/word_eat.mp3",
+      "bytes": 5156,
+      "sha256": "541588eb6af9bc1146c992a6d15afe8d9b5d60bd36151816ad54c9a0d4c827e0"
+    },
+    {
+      "path": "narration/word_eight.mp3",
+      "bytes": 5084,
+      "sha256": "61a06b106b4fa7d6ad459c02508f6fed6b70503d43c71bbd3d7522665136ec12"
+    },
+    {
+      "path": "narration/word_find.mp3",
+      "bytes": 5756,
+      "sha256": "920d91ed63f79796a2376fa64e7aa57ddf696f3d32b0147741de78f92396d876"
+    },
+    {
+      "path": "narration/word_five.mp3",
+      "bytes": 6260,
+      "sha256": "6a29a4c55f28ff115ebfa928da2a0175e83fb4bda757d3ff8c7e95a6f0fcb6a0"
+    },
+    {
+      "path": "narration/word_four.mp3",
+      "bytes": 5684,
+      "sha256": "1619e8a86a57b05da87819568c3569739e46fac509fd24f220c5b137120fb68b"
+    },
+    {
+      "path": "narration/word_funny.mp3",
+      "bytes": 5324,
+      "sha256": "645b6ee73d6d35979c8e8a7b3cbd08343c3448ae5ac7bb3eddfc700117704e1a"
+    },
+    {
+      "path": "narration/word_good.mp3",
+      "bytes": 4556,
+      "sha256": "994031f8fbde823aa541e13954c6979eb34e9f265621ec5707d989ae8877aac5"
+    },
+    {
+      "path": "narration/word_gray.mp3",
+      "bytes": 5900,
+      "sha256": "1b30a9c7ede814fa6625526cbd4f294d9b8b129c46439e2bb067a3f5fccad82d"
+    },
+    {
+      "path": "narration/word_green.mp3",
+      "bytes": 5156,
+      "sha256": "e83bc1797484256b555621f35f64aed3b1f0933734fa3336d44724fadc2ce48e"
+    },
+    {
+      "path": "narration/word_has.mp3",
+      "bytes": 6572,
+      "sha256": "ab521c1e1e43365d7a9dc733f6b6339db653f091f78508ded903aaba79991115"
+    },
+    {
+      "path": "narration/word_he.mp3",
+      "bytes": 5012,
+      "sha256": "46794a8c63051c09a5272acad599a5fdb99ce9219212a41cd67069a12a9ce67f"
+    },
+    {
+      "path": "narration/word_help.mp3",
+      "bytes": 5876,
+      "sha256": "02cc09675e1d4a40b79b282acfb36db6f91dde7e1d626aa5f4a46c4aa389e00a"
+    },
+    {
+      "path": "narration/word_here.mp3",
+      "bytes": 5324,
+      "sha256": "27ee47032b3db0a402e25fda70f6bb30848af6052e0d3856dbf71b756c9358a1"
+    },
+    {
+      "path": "narration/word_into.mp3",
+      "bytes": 6284,
+      "sha256": "1f6d36abc81c543dddacce6511381add9fc370e718d1ddb0f4d1a0861f2725e4"
+    },
+    {
+      "path": "narration/word_jump.mp3",
+      "bytes": 5612,
+      "sha256": "2a23937c2809936268560eb0baa5bb6ad267cf69df4f0eab88e7f9dc3a3581af"
+    },
+    {
+      "path": "narration/word_little.mp3",
+      "bytes": 5492,
+      "sha256": "3b9232198a35714694b95207d1824f303945f880c79ff2eacb2179d31dcd7606"
+    },
+    {
+      "path": "narration/word_look.mp3",
+      "bytes": 4940,
+      "sha256": "b1297a2a14d8c2b414b2aa471518599b093768c152dae4d986a51c20181e16be"
+    },
+    {
+      "path": "narration/word_me.mp3",
+      "bytes": 4796,
+      "sha256": "d242eb4814c1b52f237c545faf5559b2248e54d17790094e48868d20bd2569f4"
+    },
+    {
+      "path": "narration/word_must.mp3",
+      "bytes": 6812,
+      "sha256": "9d0fc2f566042da3a242e0c13616b0c1e4cdb41b0fcee34f103759dbc9fe385f"
+    },
+    {
+      "path": "narration/word_my.mp3",
+      "bytes": 5684,
+      "sha256": "80b1d41518c5777b625dc1f594202ce7b796e0deafd60cdbb4cfb6e1efcf3b22"
+    },
+    {
+      "path": "narration/word_new.mp3",
+      "bytes": 5324,
+      "sha256": "2b5fa62355d6d27d36ad6468a5224bf0fb28867f48b3388b567b38a5654288ac"
+    },
+    {
+      "path": "narration/word_nine.mp3",
+      "bytes": 6620,
+      "sha256": "e34b15dd25d324aef239f4678d39565fa8d4b356c6c38f6b0bb4d6a1cfaad78e"
+    },
+    {
+      "path": "narration/word_no.mp3",
+      "bytes": 5828,
+      "sha256": "f7a8dd47c0a8325d39da82e6741fbc3f932cde78eb243324dcf84f39e09d5987"
+    },
+    {
+      "path": "narration/word_not.mp3",
+      "bytes": 5684,
+      "sha256": "3c0876ba0a8256167d0755b8686b5f8fbaafdfe7d0bb814981912c2ccb8490c4"
+    },
+    {
+      "path": "narration/word_now.mp3",
+      "bytes": 5492,
+      "sha256": "50266f2efed1471a0657213b9a7d09c7d8430a2a8e465125efb2ef9b40c88b97"
+    },
+    {
+      "path": "narration/word_of.mp3",
+      "bytes": 6044,
+      "sha256": "f799cd7722a7b3139488a124c1789c7678fdf7a857e4d7cc38694c5a6b5e9840"
+    },
+    {
+      "path": "narration/word_one.mp3",
+      "bytes": 5804,
+      "sha256": "1ba68864731aff0f07fed120e2e6861d74522e5a9cf8597325f012dacc89aa2d"
+    },
+    {
+      "path": "narration/word_our.mp3",
+      "bytes": 4892,
+      "sha256": "7d438ec07d501eb049bae995b3ae9aed9a8ee0cf2b1c7f2f99ddb100501f4b29"
+    },
+    {
+      "path": "narration/word_out.mp3",
+      "bytes": 5900,
+      "sha256": "f9008b52818deb4368e261cc938fc1b269d4552c54c6f2b4129e2af84a26891e"
+    },
+    {
+      "path": "narration/word_please.mp3",
+      "bytes": 6116,
+      "sha256": "2e657b03e23893315728217f42e98ab86838d17f1fbdcf2f33d1fd0bd2c0ee62"
+    },
+    {
+      "path": "narration/word_pretty.mp3",
+      "bytes": 5948,
+      "sha256": "9763158f27b95af673f0ea3615ccf372168f229f383a351d1ffbed0d8b1bcc29"
+    },
+    {
+      "path": "narration/word_purple.mp3",
+      "bytes": 5876,
+      "sha256": "246240ce22d717702430530386c76320e979e388a17086436b13d76cde6ade75"
+    },
+    {
+      "path": "narration/word_ride.mp3",
+      "bytes": 6380,
+      "sha256": "7549627af178b81bfa0c6c2e5ba4178a3460db3b25e6a0163c9f516aba482006"
+    },
+    {
+      "path": "narration/word_said.mp3",
+      "bytes": 6068,
+      "sha256": "6757692cec0ab22e7ea35c3ee4ddefbae2e6b1fb9031e07e7fd4c30861078b50"
+    },
+    {
+      "path": "narration/word_saw.mp3",
+      "bytes": 6140,
+      "sha256": "150eb95684299878f2e547e4a4ed02fb14cea264f3a363ff9ed2bc9e1f32f2d9"
+    },
+    {
+      "path": "narration/word_say.mp3",
+      "bytes": 6644,
+      "sha256": "57d77132dd5c2d531a058180c7f753e0f0877a196fb09b63766d0e74a168e844"
+    },
+    {
+      "path": "narration/word_seven.mp3",
+      "bytes": 6164,
+      "sha256": "fa75462a1b70147b951ff441dd257b03b7bd21628a2fbb960f39e4afb6d0505e"
+    },
+    {
+      "path": "narration/word_she.mp3",
+      "bytes": 5420,
+      "sha256": "83094487511054972a4cd78b0f545d3d36d7c5f1de32aeece2ff57f951b057be"
+    },
+    {
+      "path": "narration/word_six.mp3",
+      "bytes": 5900,
+      "sha256": "fb7c5d8723cc083f1143c82bb47506b4b43675b591a5d8298e0441bc454f46c1"
+    },
+    {
+      "path": "narration/word_soon.mp3",
+      "bytes": 6020,
+      "sha256": "24f743b5d3e079bc5806537855c93dc6910c2b18ba3a910f5f8f64b023d05b4b"
+    },
+    {
+      "path": "narration/word_ten.mp3",
+      "bytes": 5660,
+      "sha256": "b36611c670372383ef9a4ad089e8508b0f16828f5cf24dc36e62c97f43480832"
+    },
+    {
+      "path": "narration/word_that.mp3",
+      "bytes": 4772,
+      "sha256": "8d3fbcf2b36c5e0bab29eba8752342e3d1707cf0f78a1d45c3a762a16b0f79f6"
+    },
+    {
+      "path": "narration/word_there.mp3",
+      "bytes": 4724,
+      "sha256": "c62a941b5589bfd05f7b9990157c81ccb187626ea0ea8eb41c05a69af94d0c00"
+    },
+    {
+      "path": "narration/word_they.mp3",
+      "bytes": 5492,
+      "sha256": "d3212a44821171998e78dda22c6d76e7254e65822f7c2bc044bb9017b319d12f"
+    },
+    {
+      "path": "narration/word_this.mp3",
+      "bytes": 6572,
+      "sha256": "09fbc4e037bfdc1eee0229df6fbf5150de4e5c9a0e37a9dea6897c2243168028"
+    },
+    {
+      "path": "narration/word_three.mp3",
+      "bytes": 5228,
+      "sha256": "05c104de17b5e922196d4f6ac60c9564267a7b60fc04017bca613dfdbb8fdb88"
+    },
+    {
+      "path": "narration/word_too.mp3",
+      "bytes": 4868,
+      "sha256": "64e282990492c45277e26781eb391acf364c09e7f1e3c724f01ed86c7212bffc"
+    },
+    {
+      "path": "narration/word_two.mp3",
+      "bytes": 4892,
+      "sha256": "3c8899ab64d604228ee3c5ec2c2de6b74652767059a9bed9140f4a5d95848854"
+    },
+    {
+      "path": "narration/word_want.mp3",
+      "bytes": 6188,
+      "sha256": "01342a89829f12c8473f08a5c5165476e97731e591c10a9ff9116d92e89ab500"
+    },
+    {
+      "path": "narration/word_was.mp3",
+      "bytes": 6284,
+      "sha256": "cc55a2fd4cf12cc7e24cabab35728e2b91ec6aa3067fbcc6ef6b8290911751d9"
+    },
+    {
+      "path": "narration/word_we.mp3",
+      "bytes": 5348,
+      "sha256": "fb19713d195e42e5a221794bd932e0e701a0f53d286b93bbdec855479598d09d"
+    },
+    {
+      "path": "narration/word_well.mp3",
+      "bytes": 5876,
+      "sha256": "62326629010e36f30c7e98155f3f0c2e8e696f952b3b43aa2ceac5ea52a07417"
+    },
+    {
+      "path": "narration/word_went.mp3",
+      "bytes": 5948,
+      "sha256": "728194f219938b31c5a564a8e41afefba48a714df4cf6a4cf0cd8be66fdc42a4"
+    },
+    {
+      "path": "narration/word_when.mp3",
+      "bytes": 5468,
+      "sha256": "87eccf58257835e6e80f598101a471431274a18a4c3cb6cbcb43ecdeb6f94e76"
+    },
+    {
+      "path": "narration/word_white.mp3",
+      "bytes": 5180,
+      "sha256": "7939090a4f6d9b2274a078f0b17e310a90ddf0a149fafa7c9057241ae74149f2"
+    },
+    {
+      "path": "narration/word_will.mp3",
+      "bytes": 5780,
+      "sha256": "67b6fb1355c5e07f4dc4207053f056ce9647fd76177477d22457f8c5d6a9b795"
+    },
+    {
+      "path": "narration/word_with.mp3",
+      "bytes": 5924,
+      "sha256": "8b77110d3081db2c5e4e897db3f02de76e4a48ab4df0527f430e5409fc4a349d"
+    },
+    {
+      "path": "narration/word_zero.mp3",
+      "bytes": 6308,
+      "sha256": "06de86b6976621da523ba593882f8cdc6df311d10ddeb529d3590768a533b82d"
+    },
+    {
+      "path": "narration-paths.mjs",
+      "bytes": 646,
+      "sha256": "649b883e33578eb6d5a5aa0f863ac7bcc8264e185d230aed3f6b323918c3af09"
+    },
+    {
+      "path": "parent-progress.css",
+      "bytes": 793,
+      "sha256": "00026bc63a1542394fc558e025c1fbfdf8acd965464d1e0d48fb59d35caade82"
+    },
+    {
+      "path": "parent-progress.mjs",
+      "bytes": 10865,
+      "sha256": "744d3dabc93337a08430d248d07c9d82a40f96dc309550ee326c0d0e490dc066"
+    },
+    {
       "path": "parent-settings.mjs",
       "bytes": 1219,
       "sha256": "b79cd6a8c9101cbd31cc43e3bcaca1645272b56d66320b31aa298436f457cb20"
     },
     {
+      "path": "pip-companion.css",
+      "bytes": 3001,
+      "sha256": "253218dca2364f723498db8b7157cfd3186f68458b6d5560f4329002a6d6563b"
+    },
+    {
+      "path": "pip-companion.mjs",
+      "bytes": 6363,
+      "sha256": "21fea1b66ba7f3ef260798cf7eac57ca2089ac32051c8eaf3a80945b05312e80"
+    },
+    {
       "path": "player.mjs",
       "bytes": 1594,
       "sha256": "ed1fd689f0801a9809c15de564ee1013d4debf15ae724bdb61343fd942192400"
+    },
+    {
+      "path": "practice-effects.mjs",
+      "bytes": 5004,
+      "sha256": "6eb37f4fa33612bef8236504642c8ac7802b6ff3d3142d7546cebf73530d0217"
     },
     {
       "path": "prompts.mjs",
@@ -1162,59 +1587,19 @@
       "sha256": "a72fbaa9b8a8c12dc954ae1a2f2410cdc2777efe32365c2dd7df4a42c6b56fdf"
     },
     {
+      "path": "scene-background.mjs",
+      "bytes": 3899,
+      "sha256": "637f05036012e4550ee9696465ff00a4dc323bbd650544a320ccfe38e790dfff"
+    },
+    {
       "path": "sets.json",
       "bytes": 1983,
       "sha256": "6748c67a021b1209b713e0b7633a15bad53d57825a44c9865417054c662b4e1c"
     },
     {
-      "path": "storage.mjs",
-      "bytes": 1973,
-      "sha256": "09e9dd26c7c51ea66b4a5fb65a4ce04b7bf24488ac672a8eb81a45c636a57a78"
-    },
-    {
-      "path": "style.css",
-      "bytes": 6140,
-      "sha256": "566b4af8e88dbd6e40b47f6e38cd172fa54ea0663658394d281b6ea9ae432608"
-    },
-    {
-      "path": "words.mjs",
-      "bytes": 1027,
-      "sha256": "ddc9048ca7e6dc66c5fbcb0381bc8cf3cda5e85bdffc6450de696fa6d866c2c8"
-    },
-    {
-      "path": "train-arrival-clock.mjs",
-      "bytes": 1003,
-      "sha256": "f8e651ce7e023893ac3986fcedddb66cbc1c87dd0f46ee581afc9a28a03d74a0"
-    },
-    {
-      "path": "train-canvas.mjs",
-      "bytes": 3317,
-      "sha256": "d306df4b9c9c98a2d872da21ec716affbd081a2241a58c80061eee313b59d0ec"
-    },
-    {
-      "path": "train-motion-phase.mjs",
-      "bytes": 710,
-      "sha256": "92c8155ca1b81ce7d739a3ab0f44f6477ebb2209c2baf7a12bd22db81f194644"
-    },
-    {
-      "path": "train-motion-flight.mjs",
-      "bytes": 1029,
-      "sha256": "a8f1741dd91410407cbfa8dad885c3a5639c15a69afe1bfc5063be6d674dfc2d"
-    },
-    {
-      "path": "train-motion-fireworks.mjs",
-      "bytes": 2410,
-      "sha256": "8b8e88d746a58a70e7509de650e7d1994f95ba04234f436b0f6fdf0d99028487"
-    },
-    {
       "path": "shoe-assets.mjs",
       "bytes": 3914,
       "sha256": "4468c1561317db88e6476107847d34e1da06e0ee0b11bd303c66d4a3bac46eae"
-    },
-    {
-      "path": "shoe-tube.mjs",
-      "bytes": 3046,
-      "sha256": "7869740cf851b0e603324c930e1f7be2f5a6335a8b97937a249e0718dbcad34c"
     },
     {
       "path": "shoe-renderer.mjs",
@@ -1227,69 +1612,9 @@
       "sha256": "1f11a4ea17cff2ced046d3ce99c0e7f02a92174f63b70a17396628790a1993b9"
     },
     {
-      "path": "assets/shoe/shoe.mesh",
-      "bytes": 500410,
-      "sha256": "146a91396054d7f4f55a3196d42840e7c75dc48a62c6de500b3e5ed258923b28"
-    },
-    {
-      "path": "assets/shoe/shoe.png",
-      "bytes": 1651461,
-      "sha256": "c699f54321b5de646f2f0317801c0e4904f3b803b9b2a27ea2d65a4513e32ca5"
-    },
-    {
-      "path": "assets/shoe/motion.bin",
-      "bytes": 2501568,
-      "sha256": "8408c9386a8a1949fd589ef1c8ce494c7a2d689de03794e820abb4028028b527"
-    },
-    {
-      "path": "assets/shoe/anchors.json",
-      "bytes": 3035,
-      "sha256": "1ce2ea1eeb5008373a47d09b2114e4ae93ef5ede283ab5ffdacaa07ff2ac2661"
-    },
-    {
-      "path": "assets/shoe/threading.json",
-      "bytes": 13291,
-      "sha256": "113b0b83b398a06e32b72ea9dcd661ce266f970f14c2a645be5ba77701f6c1db"
-    },
-    {
-      "path": "assets/shoe/provenance.json",
-      "bytes": 1374,
-      "sha256": "8c89382acc230a1492bd9b8750a22a5ad79e7f332b25b093ae7f6154bd78cabb"
-    },
-    {
-      "path": "assets/shoe/asset-manifest.json",
-      "bytes": 1846,
-      "sha256": "9dee8a53bebe1b303e485772912a7cc120f181c4812c4cd39c9741b082fab83b"
-    },
-    {
-      "path": "parent-progress.mjs",
-      "bytes": 10865,
-      "sha256": "744d3dabc93337a08430d248d07c9d82a40f96dc309550ee326c0d0e490dc066"
-    },
-    {
-      "path": "parent-progress.css",
-      "bytes": 793,
-      "sha256": "00026bc63a1542394fc558e025c1fbfdf8acd965464d1e0d48fb59d35caade82"
-    },
-    {
-      "path": "practice-effects.mjs",
-      "bytes": 5004,
-      "sha256": "6eb37f4fa33612bef8236504642c8ac7802b6ff3d3142d7546cebf73530d0217"
-    },
-    {
-      "path": "pip-companion.mjs",
-      "bytes": 6363,
-      "sha256": "21fea1b66ba7f3ef260798cf7eac57ca2089ac32051c8eaf3a80945b05312e80"
-    },
-    {
-      "path": "pip-companion.css",
-      "bytes": 3001,
-      "sha256": "253218dca2364f723498db8b7157cfd3186f68458b6d5560f4329002a6d6563b"
-    },
-    {
-      "path": "letter-bloom.mjs",
-      "bytes": 5495,
-      "sha256": "bf61155e5bfaf1f48b40bc3a76df8e5c6455b3640b1ec7c41e36ae174235f0b5"
+      "path": "shoe-tube.mjs",
+      "bytes": 3046,
+      "sha256": "7869740cf851b0e603324c930e1f7be2f5a6335a8b97937a249e0718dbcad34c"
     },
     {
       "path": "star-celebration.mjs",
@@ -1297,29 +1622,54 @@
       "sha256": "da47a4ddba35b4aa8e88267b9201ee7ef744444f9b9d916100861ec9dd984a7e"
     },
     {
-      "path": "word-pop-float.mjs",
-      "bytes": 3544,
-      "sha256": "1ddfee36fa702ca38480c88935b5105aac9cbdc7ba2e1f4349289fa76d1ee1bf"
+      "path": "storage.mjs",
+      "bytes": 1973,
+      "sha256": "09e9dd26c7c51ea66b4a5fb65a4ce04b7bf24488ac672a8eb81a45c636a57a78"
     },
     {
-      "path": "scene-background.mjs",
-      "bytes": 3899,
-      "sha256": "637f05036012e4550ee9696465ff00a4dc323bbd650544a320ccfe38e790dfff"
+      "path": "style.css",
+      "bytes": 6140,
+      "sha256": "566b4af8e88dbd6e40b47f6e38cd172fa54ea0663658394d281b6ea9ae432608"
     },
     {
-      "path": "adventure-art.mjs",
-      "bytes": 4854,
-      "sha256": "1bf1bd94a5c3d28177dcda2eaa25612ca49f402be367be53b95b04be0770ad0c"
+      "path": "train-arrival-clock.mjs",
+      "bytes": 1003,
+      "sha256": "f8e651ce7e023893ac3986fcedddb66cbc1c87dd0f46ee581afc9a28a03d74a0"
     },
     {
-      "path": "home-layout.mjs",
-      "bytes": 7961,
-      "sha256": "4a1dd3902de1e8710e13c58ff7d65acb7c19bd1273bb6a0a2a7690f86f8dfb10"
+      "path": "train-canvas.mjs",
+      "bytes": 3317,
+      "sha256": "d306df4b9c9c98a2d872da21ec716affbd081a2241a58c80061eee313b59d0ec"
+    },
+    {
+      "path": "train-motion-fireworks.mjs",
+      "bytes": 2410,
+      "sha256": "8b8e88d746a58a70e7509de650e7d1994f95ba04234f436b0f6fdf0d99028487"
+    },
+    {
+      "path": "train-motion-flight.mjs",
+      "bytes": 1029,
+      "sha256": "a8f1741dd91410407cbfa8dad885c3a5639c15a69afe1bfc5063be6d674dfc2d"
+    },
+    {
+      "path": "train-motion-phase.mjs",
+      "bytes": 710,
+      "sha256": "92c8155ca1b81ce7d739a3ab0f44f6477ebb2209c2baf7a12bd22db81f194644"
     },
     {
       "path": "unicorn-race-view.mjs",
       "bytes": 8289,
       "sha256": "46ffdce55e029930e3391ee7f7de392ee5e64f667198393ec5742c0b6b869466"
+    },
+    {
+      "path": "word-pop-float.mjs",
+      "bytes": 3544,
+      "sha256": "1ddfee36fa702ca38480c88935b5105aac9cbdc7ba2e1f4349289fa76d1ee1bf"
+    },
+    {
+      "path": "words.mjs",
+      "bytes": 1027,
+      "sha256": "ddc9048ca7e6dc66c5fbcb0381bc8cf3cda5e85bdffc6450de696fa6d866c2c8"
     }
   ]
 }
